@@ -10,6 +10,12 @@
 		04193E8925C7E73E00401495 /* tbl_voice_color.csv in Resources */ = {isa = PBXBuildFile; fileRef = 04193E8825C7E73E00401495 /* tbl_voice_color.csv */; };
 		042E23BB25C00C4A009D2A68 /* DBColorNames.m in Sources */ = {isa = PBXBuildFile; fileRef = 042E23B925C00C4A009D2A68 /* DBColorNames.m */; };
 		0444E0002609D3D7005BE1E6 /* UserInstructionVC.m in Sources */ = {isa = PBXBuildFile; fileRef = 0444DFFE2609D3D6005BE1E6 /* UserInstructionVC.m */; };
+		045186D8260B19D0009A034E /* secured@2x.png in Resources */ = {isa = PBXBuildFile; fileRef = 045186D5260B19D0009A034E /* secured@2x.png */; };
+		045186D9260B19D0009A034E /* secured@3x.png in Resources */ = {isa = PBXBuildFile; fileRef = 045186D6260B19D0009A034E /* secured@3x.png */; };
+		045186DA260B19D0009A034E /* secured.png in Resources */ = {isa = PBXBuildFile; fileRef = 045186D7260B19D0009A034E /* secured.png */; };
+		045186DE260B402D009A034E /* securedgreen@3x.png in Resources */ = {isa = PBXBuildFile; fileRef = 045186DB260B402D009A034E /* securedgreen@3x.png */; };
+		045186DF260B402D009A034E /* securedgreen@2x.png in Resources */ = {isa = PBXBuildFile; fileRef = 045186DC260B402D009A034E /* securedgreen@2x.png */; };
+		045186E0260B402D009A034E /* securedgreen.png in Resources */ = {isa = PBXBuildFile; fileRef = 045186DD260B402D009A034E /* securedgreen.png */; };
 		6B95234ACAC3BA48FD730119 /* libPods-SmartLightApp.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 2ACEBC0D046AE21E9E71668D /* libPods-SmartLightApp.a */; };
 		9703E6D421DB90D7004CA364 /* whatsapp@3x.png in Resources */ = {isa = PBXBuildFile; fileRef = 9703E6C221DB90D4004CA364 /* whatsapp@3x.png */; };
 		9703E6D521DB90D7004CA364 /* linkedin-box@3x.png in Resources */ = {isa = PBXBuildFile; fileRef = 9703E6C321DB90D4004CA364 /* linkedin-box@3x.png */; };
@@ -624,6 +630,12 @@
 		042E23BA25C00C4A009D2A68 /* DBColorNames.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = DBColorNames.h; sourceTree = "<group>"; };
 		0444DFFE2609D3D6005BE1E6 /* UserInstructionVC.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = UserInstructionVC.m; sourceTree = "<group>"; };
 		0444DFFF2609D3D6005BE1E6 /* UserInstructionVC.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = UserInstructionVC.h; sourceTree = "<group>"; };
+		045186D5260B19D0009A034E /* secured@2x.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "secured@2x.png"; sourceTree = "<group>"; };
+		045186D6260B19D0009A034E /* secured@3x.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "secured@3x.png"; sourceTree = "<group>"; };
+		045186D7260B19D0009A034E /* secured.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = secured.png; sourceTree = "<group>"; };
+		045186DB260B402D009A034E /* securedgreen@3x.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "securedgreen@3x.png"; sourceTree = "<group>"; };
+		045186DC260B402D009A034E /* securedgreen@2x.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "securedgreen@2x.png"; sourceTree = "<group>"; };
+		045186DD260B402D009A034E /* securedgreen.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = securedgreen.png; sourceTree = "<group>"; };
 		2ACEBC0D046AE21E9E71668D /* libPods-SmartLightApp.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = "libPods-SmartLightApp.a"; sourceTree = BUILT_PRODUCTS_DIR; };
 		2F4BCA447A87051C52C73D43 /* Pods-SmartLightApp.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-SmartLightApp.release.xcconfig"; path = "Pods/Target Support Files/Pods-SmartLightApp/Pods-SmartLightApp.release.xcconfig"; sourceTree = "<group>"; };
 		9703E6C221DB90D4004CA364 /* whatsapp@3x.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = "whatsapp@3x.png"; path = "Other icons/whatsapp@3x.png"; sourceTree = "<group>"; };
@@ -2045,6 +2057,12 @@
 		AB0139822063DA2200F8E661 /* Other icons */ = {
 			isa = PBXGroup;
 			children = (
+				045186DD260B402D009A034E /* securedgreen.png */,
+				045186DC260B402D009A034E /* securedgreen@2x.png */,
+				045186DB260B402D009A034E /* securedgreen@3x.png */,
+				045186D7260B19D0009A034E /* secured.png */,
+				045186D5260B19D0009A034E /* secured@2x.png */,
+				045186D6260B19D0009A034E /* secured@3x.png */,
 				9712FD972220336500032ACF /* add_group@3x.png */,
 				97E7F10C2212D70C008E1DF2 /* bulb@2x.png */,
 				971587D42211BD95000BF3D5 /* temp.png */,
@@ -2751,7 +2769,7 @@
 				TargetAttributes = {
 					AB01386E2063D67B00F8E661 = {
 						CreatedOnToolsVersion = 9.0;
-						ProvisioningStyle = Automatic;
+						ProvisioningStyle = Manual;
 						SystemCapabilities = {
 							com.apple.BackgroundModes = {
 								enabled = 1;
@@ -2864,10 +2882,12 @@
 				AB013A5C2063DA2200F8E661 /* refresh_icon@3x.png in Resources */,
 				9703E6E421DB90D7004CA364 /* facebook-box.png in Resources */,
 				ABF8C152218D95AD0060C786 /* reset.png in Resources */,
+				045186D9260B19D0009A034E /* secured@3x.png in Resources */,
 				9721D4A521E710D4007E4D2B /* active_home_iconBlack@2x.png in Resources */,
 				AB013A7A2063DA2300F8E661 /* about_icon@3x.png in Resources */,
 				AB013A822063DA2300F8E661 /* feedback_icon@2x.png in Resources */,
 				AB487083207F348F00F41B78 /* active_alarm_icon@2x.png in Resources */,
+				045186DA260B19D0009A034E /* secured.png in Resources */,
 				ABCEE30920F0A04E00F470BA /* WharmLight3.png in Resources */,
 				97FCBDA622143E83000ECBF7 /* iphone5.png in Resources */,
 				AB487099207F348F00F41B78 /* settings_icon@3x.png in Resources */,
@@ -2908,6 +2928,7 @@
 				AB013A2F2063DA2200F8E661 /* default_fan_icon@3x.png in Resources */,
 				AB08023320E3CBF600219DED /* ic_wheel_four.png in Resources */,
 				AB013A1A2063DA2200F8E661 /* Icon-App-76x76@1x.png in Resources */,
+				045186D8260B19D0009A034E /* secured@2x.png in Resources */,
 				AB013A432063DA2200F8E661 /* default_switch_icon@2x.png in Resources */,
 				970A7F7D2170804A004B7F7A /* visible@3x.png in Resources */,
 				AB013A5B2063DA2200F8E661 /* refresh_icon@2x.png in Resources */,
@@ -2967,6 +2988,7 @@
 				AB9C680E21395C970060CB51 /* intro2@2x.png in Resources */,
 				9721D48821E710A4007E4D2B /* phoneBlack.png in Resources */,
 				ABDF6C2C20D3C3B200261847 /* retrivePass@3x.png in Resources */,
+				045186DF260B402D009A034E /* securedgreen@2x.png in Resources */,
 				AB013A442063DA2200F8E661 /* default_switch_icon@3x.png in Resources */,
 				978624E621DB6AF300936385 /* web@3x.png in Resources */,
 				AB1AC32620750A75007C7865 /* checked.png in Resources */,
@@ -3059,8 +3081,10 @@
 				AB487086207F348F00F41B78 /* active_favorite_icon@2x.png in Resources */,
 				AB013A172063DA2200F8E661 /* Icon-App-60x60@3x.png in Resources */,
 				ABF4B0D22147B73700498B6E /* sliderHandleBlue@2x.png in Resources */,
+				045186DE260B402D009A034E /* securedgreen@3x.png in Resources */,
 				97FC82C022214FB900017927 /* appVersion@3x.png in Resources */,
 				AB013A742063DA2300F8E661 /* whitecolor_wheel@3x.png in Resources */,
+				045186E0260B402D009A034E /* securedgreen.png in Resources */,
 				AB013A472063DA2200F8E661 /* group_icon@3x.png in Resources */,
 				97FCBDA222143E83000ECBF7 /* iphone5@2x.png in Resources */,
 				9712FD95221FF8F500032ACF /* intro10.png in Resources */,
@@ -3593,9 +3617,9 @@
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_LAUNCHIMAGE_NAME = LaunchImage;
 				CODE_SIGN_ENTITLEMENTS = SmartLightApp/SmartLightApp.entitlements;
-				CODE_SIGN_IDENTITY = "iPhone Developer";
+				CODE_SIGN_IDENTITY = "iPhone Distribution";
 				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "iPhone Developer";
-				CODE_SIGN_STYLE = Automatic;
+				CODE_SIGN_STYLE = Manual;
 				CURRENT_PROJECT_VERSION = 1.0.1;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
 				DEVELOPMENT_TEAM = 6W7JS49CTH;
@@ -3610,11 +3634,11 @@
 				INFOPLIST_FILE = SmartLightApp/Info.plist;
 				IPHONEOS_DEPLOYMENT_TARGET = 8.2;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
-				MARKETING_VERSION = 7.2.2;
+				MARKETING_VERSION = 7.2.3;
 				PRODUCT_BUNDLE_IDENTIFIER = com.vithamas.smathome;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				PROVISIONING_PROFILE = "";
-				PROVISIONING_PROFILE_SPECIFIER = "";
+				PROVISIONING_PROFILE_SPECIFIER = SmartHome_Appstore_Profile;
 				TARGETED_DEVICE_FAMILY = 1;
 			};
 			name = Debug;
@@ -3643,7 +3667,7 @@
 				INFOPLIST_FILE = SmartLightApp/Info.plist;
 				IPHONEOS_DEPLOYMENT_TARGET = 8.2;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
-				MARKETING_VERSION = 7.2.2;
+				MARKETING_VERSION = 7.2.3;
 				PRODUCT_BUNDLE_IDENTIFIER = com.vithamas.smathome;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				PROVISIONING_PROFILE = "";

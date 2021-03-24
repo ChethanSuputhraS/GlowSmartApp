@@ -110,14 +110,12 @@
             {
 //                [APP_DELEGATE movetoLogin]; // here also set Instruction vc
                 [APP_DELEGATE movetoUserInstructionVC];
-
                 [APP_DELEGATE addScannerView];
             }
             else
             {
 //                [APP_DELEGATE movetoLogin];
                 [APP_DELEGATE movetoUserInstructionVC];
-
                 [APP_DELEGATE addScannerView];
             }
         }
