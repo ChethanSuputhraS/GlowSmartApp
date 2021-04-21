@@ -1419,6 +1419,8 @@
             detailVC.deviceDict = selectedDict;
             detailVC.isfromGroup = isForGroup;
             detailVC.brightnessSliderVal = tblCell.brightnessSlider.value;
+//            detailVC.brightnessSliderVal = 1;
+
             if ([[selectedDict valueForKey:@"device_type"] isEqualToString:@"2"])
             {
                 detailVC.isDeviceWhite = YES;
@@ -3268,7 +3270,6 @@ alert.colorScheme = [UIColor blackColor];
     
     if ([sectionArr count]> [sender tag])
     {
-        
     }
     else
     {

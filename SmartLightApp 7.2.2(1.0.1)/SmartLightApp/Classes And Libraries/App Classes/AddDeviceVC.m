@@ -51,7 +51,10 @@
     NSString * strDeviceMenuData , * strConnectedDeviceName;
     BOOL isPeripheralFound;
     BOOL searchFinished;
-    NSString * strManufactureData, * strAssoicateMacAddress;
+    NSString * strManufactureData, * strAssociateDeviceName;
+    MBProgressHUD * connectDisconnectHud, * scannerHud;
+    NSString * strReconnectIdentifyManu;
+
 }
 @end
 
@@ -133,23 +136,23 @@
 //         [self refreshBtnClick];
 //    }
 //    else
-    [[BLEManager sharedManager] disconnectDevice:globalPeripheral];
-    NSArray * tmpArr = [[BLEManager sharedManager]getLastConnected];
-    [[BLEManager sharedManager] stopScan];
-    [[[BLEManager sharedManager] foundDevices] removeAllObjects];
-    for (int i=0; i<tmpArr.count; i++)
-    {
-        CBPeripheral * p = [tmpArr objectAtIndex:i];
-        if (p.state == CBPeripheralStateConnected)
-        {
-            globalPeripheral = p;
-            break;
-        }
-        else
-        {
-//            [[BLEManager sharedManager]disconnectDevice:p];
-        }
-    }
+//    [[BLEManager sharedManager] disconnectDevice:myPeripheral];
+//    NSArray * tmpArr = [[BLEManager sharedManager]getLastConnected];
+//    [[BLEManager sharedManager] stopScan];
+//    [[[BLEManager sharedManager] foundDevices] removeAllObjects];
+//    for (int i=0; i<tmpArr.count; i++)
+//    {
+//        CBPeripheral * p = [tmpArr objectAtIndex:i];
+//        if (p.state == CBPeripheralStateConnected)
+//        {
+//            myPeripheral = p;
+//            break;
+//        }
+//        else
+//        {
+////            [[BLEManager sharedManager]disconnectDevice:p];
+//        }
+//    }
 
         [self InitialBLE];
         
@@ -174,79 +177,37 @@
 //    autoConnectionTimer = [NSTimer scheduledTimerWithTimeInterval:4 target:self selector:@selector(autoConnectCheck) userInfo:nil repeats:YES];
 //    [self autoConnectCheck];
     
-    [APP_DELEGATE endHudProcess];
-//    [APP_DELEGATE startHudProcess:@"Looking for devices..."];
-//    [self performSelector:@selector(HideIndicatorTimeout) withObject:nil afterDelay:20];
+    [self performSelector:@selector(stopScanningafter5Second) withObject:nil afterDelay:8];
     
+    [scannerHud removeFromSuperview];
+    scannerHud = [[MBProgressHUD alloc] initWithView:self.view];
+    [self.view addSubview:scannerHud];
+    scannerHud.labelText = @"Scanning...";
+    [scannerHud show:YES];
+
     [[BLEManager sharedManager] setDelegate:self];
 
 }
+-(void)stopScanningafter5Second
+{
+    [self RemoveHudProcess:scannerHud];
+}
 -(void)HideIndicatorTimeout
 {
-    if (globalPeripheral.state == CBPeripheralStateConnected)
+    if (myPeripheral.state == CBPeripheralStateConnected)
     {
         
     }
     else
     {
         searchFinished = YES;
-        [APP_DELEGATE endHudProcess];
+        [self RemoveHudProcess:connectDisconnectHud];
+
         [topPullToRefreshManager tableViewReloadFinishedAnimated:NO];
         lblSuccessMsg.hidden = YES;
         [spinTimer invalidate];
         [tblView reloadData];
         tblView.hidden = NO;
-    }
-}
--(void)autoConnectCheck
-{
-//    NSLog(@"==++++++++++++++++++++++++++++++++++++++%@",globalPeripheral);
-    if (globalPeripheral.state == CBPeripheralStateConnected)
-    {
-        searchFinished = YES;
-        [APP_DELEGATE endHudProcess];
-        [topPullToRefreshManager tableViewReloadFinishedAnimated:NO];
-        lblSuccessMsg.hidden = YES;
-        [spinTimer invalidate];
-        [tblView reloadData];
-        tblView.hidden = NO;
-    }
-
-    if (isPeripheralFound == NO)
-    {
-        if (globalPeripheral.state == CBPeripheralStateConnected)
-        {
-            
-        }
-        else
-        {
-            if (isViewDisappeared == NO)
-            {
-                if ([[BLEManager sharedManager] autoConnectArr] > 0)
-                {
-                    if (lastConnectTryCount >= [[[BLEManager sharedManager] autoConnectArr] count])
-                    {
-                        lastConnectTryCount = 0;
-                    }
-                    if ([[[BLEManager sharedManager] autoConnectArr] count] > lastConnectTryCount)
-                    {
-                        CBPeripheral * p = [[[BLEManager sharedManager] autoConnectArr] objectAtIndex:lastConnectTryCount];
-                        NSLog(@"==++++++++++++++++++++++++++++++++++++++%@",[[BLEManager sharedManager] autoConnectArr]);
-                        if (p.state == CBPeripheralStateDisconnected)
-                        {
-                            isPeripheralFound = YES;
-                            [[BLEManager sharedManager] connectDevice:p];
-                        }
-                        else if (p.state == CBPeripheralStateConnecting)
-                        {
-//                            [[[BLEManager sharedManager] centralManager] cancelPeripheralConnection:p];
-                        }
-
-                        lastConnectTryCount = lastConnectTryCount + 1;
-                    }
-                }
-            }
-        }
     }
 }
 -(void)viewWillDisappear:(BOOL)animated
@@ -262,9 +223,9 @@
 
        [saveTimoutTimer invalidate];
        saveTimoutTimer = nil;
-    if (globalPeripheral.state == CBPeripheralStateConnected)
+    if (myPeripheral.state == CBPeripheralStateConnected)
     {
-        [[BLEManager sharedManager] disconnectDevice:globalPeripheral];
+        [[BLEManager sharedManager] disconnectDevice:myPeripheral];
     }
 }
 -(void)viewDidDisappear:(BOOL)animated
@@ -382,9 +343,9 @@
     [saveTimoutTimer invalidate];
     saveTimoutTimer = nil;
 
-    if (globalPeripheral.state == CBPeripheralStateConnected)
+    if (myPeripheral.state == CBPeripheralStateConnected)
     {
-        [[BLEManager sharedManager] disconnectDevice:globalPeripheral];
+        [[BLEManager sharedManager] disconnectDevice:myPeripheral];
     }
     [[NSNotificationCenter defaultCenter] removeObserver:self name:@"UpdateTableAddDevice" object:nil];
 
@@ -416,7 +377,7 @@
 //        NSMutableDictionary * dict = [[NSMutableDictionary alloc] init];
 //        [dict setObject:@"NA" forKey:@"Manufac"];
 //        [dict setObject:CBPD forKey:@"peripheral"];
-//        
+//
 //        if ([[[BLEManager sharedManager] nonConnectArr] count]==0)
 //        {
 //            [[[BLEManager sharedManager] nonConnectArr] addObject:dict];
@@ -429,22 +390,19 @@
 //            }
 //        }
 //    }
-//    
-//    [APP_DELEGATE hideScannerView];
-//    [APP_DELEGATE endHudProcess];
+//
 //}
 -(void)stopIndicator
 {
+    [self RemoveHudProcess:connectDisconnectHud];
+    [self RemoveHudProcess:scannerHud];
+
     if ([[BLEManager sharedManager] nonConnectArr]>0)
     {
-        [APP_DELEGATE hideScannerView];
-        [APP_DELEGATE endHudProcess];
     }
     else
     {
-        [APP_DELEGATE hideScannerView];
-        [APP_DELEGATE endHudProcess];
-        
+
         [alert removeFromSuperview];
         alert = [[FCAlertView alloc] init];
         alert.colorScheme = [UIColor blackColor];
@@ -553,7 +511,7 @@
                 
                 NSData * requestData = [APP_DELEGATE SendAssociationRequestFirst:strFinalData withKey:strEncryptedKey withBLEAddress:[APP_DELEGATE getStringConvertedinUnsigned:strRequetAddress] withRawDataLength:completeData.length];
 
-                [[BLEService sharedInstance] writeValuetoDeviceMsg:requestData with:globalPeripheral];
+                [[BLEService sharedInstance] writeValuetoDeviceMsg:requestData with:myPeripheral];
                 [[NSUserDefaults standardUserDefaults] setInteger:globalCount forKey:@"GlobalCount"];
                 [[NSUserDefaults standardUserDefaults] synchronize];
                 
@@ -565,9 +523,9 @@
             }
     else
     {
-        [APP_DELEGATE hideScannerView];
-        [APP_DELEGATE endHudProcess];
-        
+        [self RemoveHudProcess:connectDisconnectHud];
+        [self RemoveHudProcess:scannerHud];
+
         NSLog(@"-(void)AssociateSingleDevice:(NSString *)stringss withDeviceName:(NSString *)deviceName");
 
         [alert removeFromSuperview];
@@ -657,9 +615,12 @@
     {
         strRequetAddress = [strRequetAddress stringByAppendingString:@"00"];
     }
-    [[BLEService sharedInstance] writeValuetoDeviceMsg:requestData with:globalPeripheral];
+    [[BLEService sharedInstance] writeValuetoDeviceMsg:requestData with:myPeripheral];
     [[NSUserDefaults standardUserDefaults] setInteger:globalCount forKey:@"GlobalCount"];
     [[NSUserDefaults standardUserDefaults] synchronize];
+    
+    [self RemoveHudProcess:connectDisconnectHud];
+
 }
 -(NSData *)GetChecksumfromString:(NSData *)checksData
 {
@@ -720,7 +681,7 @@
 -(void)ResetDeviceIfnotAddedCorrectly
 {
     [APP_DELEGATE sendSignalViaScan:@"Delete" withDeviceID:newDeviceID withValue:@"0"]; //KalpeshScanCode
-    if (globalPeripheral.state == CBPeripheralStateConnected)
+    if (myPeripheral.state == CBPeripheralStateConnected)
     {
         NSInteger int1 = [@"100" integerValue];
         NSData * data1 = [[NSData alloc] initWithBytes:&int1 length:1];
@@ -767,7 +728,7 @@
         NSString * strFinalData = [APP_DELEGATE getStringConvertedinUnsigned:StrData];
         
         NSData * requestData = [APP_DELEGATE GetEncryptedKeyforData:strFinalData withKey:strEncryptedKey withLength:completeData.length];
-        [[BLEService sharedInstance] writeValuetoDeviceMsg:requestData with:globalPeripheral];
+        [[BLEService sharedInstance] writeValuetoDeviceMsg:requestData with:myPeripheral];
         [[NSUserDefaults standardUserDefaults] setInteger:globalCount forKey:@"GlobalCount"];
         [[NSUserDefaults standardUserDefaults] synchronize];
     }
@@ -919,7 +880,13 @@
 }
 -(void)tableView:(UITableView *)tableView didSelectRowAtIndexPath:(NSIndexPath *)indexPath;
 {
-    [APP_DELEGATE startHudProcess:@"Saving Device..."];
+    
+    [connectDisconnectHud removeFromSuperview];
+    connectDisconnectHud = [[MBProgressHUD alloc] initWithView:self.view];
+    [self.view addSubview:connectDisconnectHud];
+    connectDisconnectHud.labelText = @"Saving Device...";
+    [connectDisconnectHud show:YES];
+
     
 //    [self performSelector:@selector(TimeOutForDeviceSave) withObject:nil afterDelay:14];
     
@@ -929,210 +896,117 @@
     if ([arrayDevices count]>0)
     {
         CBPeripheral * p = [[arrayDevices objectAtIndex:indexPath.row] objectForKey:@"peripheral"];
-        myPeripheral = p;
-        NSString * manuStr = [[arrayDevices objectAtIndex:indexPath.row] objectForKey:@"Manufac"];
-        manuStr = [manuStr stringByReplacingOccurrencesOfString:@" " withString:@""];
-        manuStr = [manuStr stringByReplacingOccurrencesOfString:@">" withString:@""];
-        manuStr = [manuStr stringByReplacingOccurrencesOfString:@"<" withString:@""];
-        
-        HistoryCell *cell = (HistoryCell *)[tableView cellForRowAtIndexPath:indexPath];
-        strSelectedSingleDeviceAddres = [[NSString stringWithFormat:@"%@",cell.lblAddress.text] uppercaseString];
-        strAddress = [strSelectedSingleDeviceAddres uppercaseString];
-        
-        if ([manuStr length]>=26)
-        {
-            NSRange RANGEKP = NSMakeRange(18, 4);
-            NSString * strAddedd = [manuStr substringWithRange:RANGEKP];
-            if ([strAddedd isEqualToString:@"1700"])
+            myPeripheral = p;
+            NSString * manuStr = [[arrayDevices objectAtIndex:indexPath.row] objectForKey:@"Manufac"];
+            manuStr = [manuStr stringByReplacingOccurrencesOfString:@" " withString:@""];
+            manuStr = [manuStr stringByReplacingOccurrencesOfString:@">" withString:@""];
+            manuStr = [manuStr stringByReplacingOccurrencesOfString:@"<" withString:@""];
+            
+            HistoryCell *cell = (HistoryCell *)[tableView cellForRowAtIndexPath:indexPath];
+            strSelectedSingleDeviceAddres = [[NSString stringWithFormat:@"%@",cell.lblAddress.text] uppercaseString];
+            strAddress = [strSelectedSingleDeviceAddres uppercaseString];
+            
+            if ([manuStr length]>=26)
             {
-                NSRange range71 = NSMakeRange(6, 4);
-                NSString * strHexDeviceID = [manuStr substringWithRange:range71];
-                
-                [saveTimoutTimer invalidate];
-                saveTimoutTimer = nil;
-                saveTimoutTimer = [NSTimer scheduledTimerWithTimeInterval:7 target:self selector:@selector(TimeOutForDeviceSave) userInfo:nil repeats:NO];
-
-                if ([strHexDeviceID length]>=4)
+                NSRange RANGEKP = NSMakeRange(18, 4);
+                NSString * strAddedd = [manuStr substringWithRange:RANGEKP];
+                if ([strAddedd isEqualToString:@"1700"])
                 {
-                    NSString * str1 = [strHexDeviceID substringWithRange:NSMakeRange(0, 2)];
-                    NSString * str2 = [strHexDeviceID substringWithRange:NSMakeRange(2, 2)];
+                    NSRange range71 = NSMakeRange(6, 4);
+                    NSString * strHexDeviceID = [manuStr substringWithRange:range71];
                     
-                    NSString * strConverted = [NSString stringWithFormat:@"%@%@",str2,str1];
-                    unsigned result = 0;
-                    NSScanner *scanner = [NSScanner scannerWithString:strConverted];
-                    [scanner scanHexInt:&result];
-                    newDeviceID = [NSString stringWithFormat:@"%u",result];
-                    
-                    if ([manuStr length]>37)
+                    [saveTimoutTimer invalidate];
+                    saveTimoutTimer = nil;
+                    saveTimoutTimer = [NSTimer scheduledTimerWithTimeInterval:7 target:self selector:@selector(TimeOutForDeviceSave) userInfo:nil repeats:NO];
+
+                    if ([strHexDeviceID length]>=4)
                     {
-                        range71 = NSMakeRange([manuStr length]-4, 4);
-                        NSString * strType = [manuStr substringWithRange:range71];
-                        [self getDeviceTypes:strType];
+                        NSString * str1 = [strHexDeviceID substringWithRange:NSMakeRange(0, 2)];
+                        NSString * str2 = [strHexDeviceID substringWithRange:NSMakeRange(2, 2)];
+                        
+                        NSString * strConverted = [NSString stringWithFormat:@"%@%@",str2,str1];
+                        unsigned result = 0;
+                        NSScanner *scanner = [NSScanner scannerWithString:strConverted];
+                        [scanner scanHexInt:&result];
+                        newDeviceID = [NSString stringWithFormat:@"%u",result];
+                        
+                        if ([manuStr length]>37)
+                        {
+                            range71 = NSMakeRange([manuStr length]-4, 4);
+                            NSString * strType = [manuStr substringWithRange:range71];
+                            [self getDeviceTypes:strType];
+                        }
+                        else
+                        {
+                            [self getDeviceTypes:@"0100"];
+                        }
+                        NSString * msgPlaceHolder = [NSString stringWithFormat:@"Enter Device Name"];
+                        
+                        isDeviceResponsed = YES;
+                        [saveTimoutTimer invalidate];
+                        saveTimoutTimer = nil;
+                        strHexIdofDevice = strHexDeviceID;
+
+                        [self RemoveHudProcess:connectDisconnectHud];
+
+                        [alert removeFromSuperview];
+                        alert = [[FCAlertView alloc] init];
+                        alert.delegate = self;
+                        alert.tag = 123;
+                        alert.colorScheme = global_brown_color;
+                        
+                        UITextField *customField = [[UITextField alloc] init];
+                        customField.placeholder = msgPlaceHolder;
+                        customField.keyboardAppearance = UIKeyboardAppearanceAlert;
+                        customField.textColor = [UIColor blackColor];
+                        [APP_DELEGATE getPlaceholderText:customField andColor:[UIColor lightGrayColor]];
+
+                        //                        customField.text = strRename;
+                        [alert addTextFieldWithCustomTextField:customField andPlaceholder:nil andTextReturnBlock:^(NSString *text) {
+                            strDeviceNames = text;
+                        }];
+                        [alert showAlertInView:self
+                                     withTitle:@"Smart Light"
+                                  withSubtitle:@"Enter name"
+                               withCustomImage:nil
+                           withDoneButtonTitle:nil
+                                    andButtons:nil];
+                    }
+                }
+                else
+                {
+                    if (p.state == CBPeripheralStateConnected)
+                    {
+                        strSelectedAddress = strAddress;
+                        strManufactureData = manuStr;
+                        strAssociateDeviceName = p.name;
+                        isDeviceAdded = NO;
+                        myPeripheral = p;
+                        
+                        [self AssociateSingleDevice:manuStr withDeviceName:p.name];
                     }
                     else
                     {
-                        [self getDeviceTypes:@"0100"];
-                    }
-                    NSString * msgPlaceHolder = [NSString stringWithFormat:@"Enter Device Name"];
-                    
-                    isDeviceResponsed = YES;
-                    [saveTimoutTimer invalidate];
-                    saveTimoutTimer = nil;
-                    strHexIdofDevice = strHexDeviceID;
+                        strSelectedAddress = strAddress;
+                        strManufactureData = manuStr;
+                        strAssociateDeviceName = p.name;
+                        isDeviceAdded = NO;
+                        myPeripheral = p;
+                        [saveTimoutTimer invalidate];
+                        saveTimoutTimer = nil;
+                        saveTimoutTimer = [NSTimer scheduledTimerWithTimeInterval:10 target:self selector:@selector(RetryAddingDeviceOnceConnected) userInfo:nil repeats:NO];
 
-                    [APP_DELEGATE endHudProcess];
-                    
-                    [alert removeFromSuperview];
-                    alert = [[FCAlertView alloc] init];
-                    alert.delegate = self;
-                    alert.tag = 123;
-                    alert.colorScheme = global_brown_color;
-                    
-                    UITextField *customField = [[UITextField alloc] init];
-                    customField.placeholder = msgPlaceHolder;
-                    customField.keyboardAppearance = UIKeyboardAppearanceAlert;
-                    customField.textColor = [UIColor blackColor];
-                    [APP_DELEGATE getPlaceholderText:customField andColor:[UIColor lightGrayColor]];
-
-                    //                        customField.text = strRename;
-                    [alert addTextFieldWithCustomTextField:customField andPlaceholder:nil andTextReturnBlock:^(NSString *text) {
-                        strDeviceNames = text;
-                    }];
-                    [alert showAlertInView:self
-                                 withTitle:@"Smart Light"
-                              withSubtitle:@"Enter name"
-                           withCustomImage:nil
-                       withDoneButtonTitle:nil
-                                andButtons:nil];
-                }
-            }
-            else
-            {
-                strSelectedAddress = strAddress;
-                strManufactureData = manuStr;
-                strAssoicateMacAddress = p.name;
-                isDeviceAdded = NO;
-                if (globalPeripheral.state == CBPeripheralStateConnected)
-                {
-                    myPeripheral = globalPeripheral;
-                }
-                 if (myPeripheral.state == CBPeripheralStateConnected)
-                 {
-                     [saveTimoutTimer invalidate];
-                     saveTimoutTimer = nil;
-                     saveTimoutTimer = [NSTimer scheduledTimerWithTimeInterval:20 target:self selector:@selector(TimeOutForDeviceSave) userInfo:nil repeats:NO];
-
-                     [self AssociateSingleDevice:manuStr withDeviceName:p.name];
-                 }
-                else
-                {
-                    connectionTrialCount = 0;
-                    [self  sentConnectRequest];
-                }
-//
-                NSLog(@"=========================>Device Start Adding ====>");
-//
-//
-//                connectionTrialCount = 0;
-//                [saveTimoutTimer invalidate];
-//                saveTimoutTimer = nil;
-//                saveTimoutTimer = [NSTimer scheduledTimerWithTimeInterval:20 target:self selector:@selector(TimeOutForDeviceSave) userInfo:nil repeats:NO];
-//
-//                if (globalPeripheral.state == CBPeripheralStateConnected)
-//                {
-//                    [self AssociateSingleDevice:manuStr withDeviceName:p.name];
-//                }
-//                else
-//                {
-//                    [retryConnectTimer invalidate];
-//                    retryConnectTimer = nil;
-////                    retryConnectTimer = [NSTimer scheduledTimerWithTimeInterval:2 target:self selector:@selector(RetryAddingDeviceOnceConnected:) userInfo:@{@"menuStr": manuStr, @"name" : p.name} repeats:YES];
-//                }
-            }
-        }
-    }
-}
--(void)sentConnectRequest
-{
-    NSLog(@"<-------RetryConnectDeviceHappend  Connected-------->%d",connectionTrialCount);
-
-    if (globalPeripheral.state == CBPeripheralStateConnected)
-    {
-        if (globalPeripheral)
-        {
-            if (globalPeripheral.state == CBPeripheralStateConnected)
-            {
-//                myPeripheral = tempPeripheral;
-//                globalPeripheral = tempPeripheral;
-                
-                [APP_DELEGATE endHudProcess];
-                [APP_DELEGATE startHudProcess:@"Saving Device..."];
-
-                [saveTimoutTimer invalidate];
-                saveTimoutTimer = nil;
-                saveTimoutTimer = [NSTimer scheduledTimerWithTimeInterval:20 target:self selector:@selector(TimeOutForDeviceSave) userInfo:nil repeats:NO];
-//                globalPeripheral = myPeripheral;
-                if (globalPeripheral.state == CBPeripheralStateConnected)
-                {
-                    NSMutableArray * arrayDevices = [[NSMutableArray alloc] init];
-                    arrayDevices =[[BLEManager sharedManager] nonConnectArr];
-                    
-//                    [dict setObject:nameString forKey:@"Manufac"];
-//                    [dict setObject:strAddressFound forKey:@"address"];
-
-                    if ([[arrayDevices valueForKey:@"address"] containsObject:strAddress])
-                    {
-                        NSInteger foundIndex = [[arrayDevices valueForKey:@"address"] indexOfObject:strAddress];
-                        if (foundIndex != NSNotFound)
-                        {
-                            if ([arrayDevices count] > foundIndex)
-                            {
-                                NSString * manuStr = [[arrayDevices objectAtIndex:foundIndex] objectForKey:@"Manufac"];
-                                manuStr = [manuStr stringByReplacingOccurrencesOfString:@" " withString:@""];
-                                manuStr = [manuStr stringByReplacingOccurrencesOfString:@">" withString:@""];
-                                manuStr = [manuStr stringByReplacingOccurrencesOfString:@"<" withString:@""];
-                                
-                                strSelectedAddress = strAddress;
-                                [self AssociateSingleDevice:manuStr withDeviceName:strAssoicateMacAddress];
-                                tempPeripheral = nil;
-
-                            }
-                        }
+                        [[BLEManager sharedManager] connectDevice:p];
                     }
                 }
             }
-        }
-    }
-    else
-    {
-        if (connectionTrialCount <10)
-        {
-            [self onConnectWithDevice:myPeripheral];
-            connectionTrialCount = connectionTrialCount +1;
-            [self performSelector:@selector(sentConnectRequest) withObject:nil afterDelay:1];
-        }
-        else
-        {
-            [APP_DELEGATE endHudProcess];
-            [alert removeFromSuperview];
-            alert = [[FCAlertView alloc] init];
-            alert.colorScheme = [UIColor blackColor];
-            [alert makeAlertTypeCaution];
-            [alert showAlertInView:self
-                         withTitle:@"Smart Light"
-                      withSubtitle:@"Something went wrong. Please try again later."
-                   withCustomImage:[UIImage imageNamed:@"logo.png"]
-               withDoneButtonTitle:nil
-                        andButtons:nil];
-        }
     }
 }
--(void)RetryAddingDeviceOnceConnected:(NSTimer*)timer
+
+-(void)RetryAddingDeviceOnceConnected
 {
-    NSDictionary * tmpDict = [[timer userInfo] mutableCopy];
-    if (globalPeripheral.state == CBPeripheralStateConnected)
+    if (myPeripheral.state == CBPeripheralStateConnected)
     {
-        NSLog(@"<-------RetryConnectDeviceHappend  Connected-------->%@",[timer userInfo]);
 
         [retryConnectTimer invalidate];
         retryConnectTimer = nil;
@@ -1140,48 +1014,24 @@
         [saveTimoutTimer invalidate];
         saveTimoutTimer = nil;
 
-        NSString * strMenu = [tmpDict objectForKey:@"menuStr"] ;
-        NSString * strName = [tmpDict objectForKey:@"name"] ;
+        NSString * strMenu = strManufactureData ;
+        NSString * strName = strAssociateDeviceName ;
         [self AssociateSingleDevice:strMenu withDeviceName:strName];
     }
     else
     {
-        NSLog(@"<-------RetryConnectDeviceHappend Not Connected-------->%@",[timer userInfo]);
-
-        connectionTrialCount = connectionTrialCount + 1;
-        if (connectionTrialCount < 3)
-        {
-        }
-        else
-        {
-            [APP_DELEGATE endHudProcess];
-            [APP_DELEGATE hideScannerView];
-                [retryConnectTimer invalidate];
-                retryConnectTimer = nil;
-
-            [saveTimoutTimer invalidate];
-            saveTimoutTimer = nil;
-
-            NSLog(@"-(void)RetryAddingDeviceOnceConnected:(NSTimer*)timer");
-            if (isDeviceAdded == YES)
-            {
-                
-            }
-            else
-            {
-                [[BLEManager sharedManager]disconnectDevice:globalPeripheral];
-                [alert removeFromSuperview];
-                alert = [[FCAlertView alloc] init];
-                alert.colorScheme = [UIColor blackColor];
-                [alert makeAlertTypeCaution];
-                [alert showAlertInView:self
-                             withTitle:@"Smart Light"
-                          withSubtitle:@"Something went wrong. Please try again later."
-                       withCustomImage:[UIImage imageNamed:@"logo.png"]
-                   withDoneButtonTitle:nil
-                            andButtons:nil];
-            }
-        }
+        [self RemoveHudProcess:connectDisconnectHud];
+        [[BLEManager sharedManager]disconnectDevice:myPeripheral];
+        [alert removeFromSuperview];
+        alert = [[FCAlertView alloc] init];
+        alert.colorScheme = [UIColor blackColor];
+        [alert makeAlertTypeCaution];
+        [alert showAlertInView:self
+                     withTitle:@"Smart Light"
+                  withSubtitle:@"Something went wrong. Please try again later."
+               withCustomImage:[UIImage imageNamed:@"logo.png"]
+           withDoneButtonTitle:nil
+                    andButtons:nil];
     }
 }
 #pragma mark - BLE Methods
@@ -1228,7 +1078,8 @@
             NSLog(@"CallNotificationforNonConnectforAdd==========>");
             if (searchFinished == YES)
             {
-                [APP_DELEGATE endHudProcess];
+                [self RemoveHudProcess:scannerHud];
+
                 [topPullToRefreshManager tableViewReloadFinishedAnimated:NO];
                 lblSuccessMsg.hidden = YES;
                 [spinTimer invalidate];
@@ -1248,7 +1099,8 @@
 -(void)DeviceAddedSuccessfully:(NSDictionary *)dict
 {
     isDeviceAdded = YES;
-    [APP_DELEGATE endHudProcess];
+    [self RemoveHudProcess:connectDisconnectHud];
+
     NSLog(@"=========================>Device Added Successfully====>%@",dict);
             isAllowOnce = YES;
             NSString * msgPlaceHolder = [NSString stringWithFormat:@"Enter Device Name"];
@@ -1257,7 +1109,6 @@
             [saveTimoutTimer invalidate];
     saveTimoutTimer = nil;
 
-                                    [APP_DELEGATE endHudProcess];
                                     
                                     [alert removeFromSuperview];
                                     alert = [[FCAlertView alloc] init];
@@ -1351,7 +1202,7 @@
                         isDeviceResponsed = YES;
                         [saveTimoutTimer invalidate];
                         saveTimoutTimer = nil;
-                        [APP_DELEGATE endHudProcess];
+                        [self RemoveHudProcess:connectDisconnectHud];
 
                         [alert removeFromSuperview];
                         alert = [[FCAlertView alloc] init];
@@ -1408,8 +1259,8 @@
                                 isDeviceResponsed = YES;
                                 [saveTimoutTimer invalidate];
                                 saveTimoutTimer = nil;
-                                [APP_DELEGATE endHudProcess];
-                                
+                                [self RemoveHudProcess:connectDisconnectHud];
+
                                 [alert removeFromSuperview];
                                 alert = [[FCAlertView alloc] init];
                                 alert.delegate = self;
@@ -1484,8 +1335,8 @@
     }
     else
     {
-        [APP_DELEGATE hideScannerView];
-        [APP_DELEGATE endHudProcess];
+
+        [self RemoveHudProcess:connectDisconnectHud];
 
         [alert removeFromSuperview];
         alert = [[FCAlertView alloc] init];
@@ -1552,9 +1403,8 @@
     }
     else
     {
-        [APP_DELEGATE hideScannerView];
-        [APP_DELEGATE endHudProcess];
-        
+        [self RemoveHudProcess:connectDisconnectHud];
+
         [alert removeFromSuperview];
         alert = [[FCAlertView alloc] init];
         alert.colorScheme = [UIColor blackColor];
@@ -1577,9 +1427,8 @@
 {
     [topPullToRefreshManager tableViewReloadFinishedAnimated:NO];
 
-    [APP_DELEGATE hideScannerView];
-    [APP_DELEGATE endHudProcess];
-    
+    [self RemoveHudProcess:connectDisconnectHud];
+
 //    NSLog(@"The result is...%@", result);
     if ([[result valueForKey:@"commandName"] isEqualToString:@"SaveDevice"])
     {
@@ -1635,8 +1484,7 @@
 {
     [topPullToRefreshManager tableViewReloadFinishedAnimated:NO];
 
-    [APP_DELEGATE hideScannerView];
-    [APP_DELEGATE endHudProcess];
+    [self RemoveHudProcess:connectDisconnectHud];
 
 //    NSLog(@"The error is...%@", error);
     
@@ -1698,10 +1546,10 @@
 {
     if ([[[BLEManager sharedManager] nonConnectArr] count] >0)
     {
+        [self RemoveHudProcess:scannerHud];
+
         lblSuccessMsg.hidden = YES;
         tblView.hidden = NO;
-//        [APP_DELEGATE hideScannerView];
-//        [APP_DELEGATE endHudProcess];
     }
     else
     {
@@ -1724,7 +1572,7 @@
     if (peripheral)
     {
         CBPeripheral * p = peripheral;
-//        tempPeripheral = p;
+        myPeripheral = p;
 //        [self sentConnectRequest];
     }
 //    [[BLEService sharedInstance] sendNotifications:myPeripheral withType:NO];
@@ -1736,8 +1584,6 @@
     {
         lblSuccessMsg.hidden = YES;
         tblView.hidden = YES;
-//        [APP_DELEGATE hideScannerView];
-//        [APP_DELEGATE endHudProcess];
     }
     else
     {
@@ -1753,7 +1599,7 @@
     {
         CBPeripheral * p = [notification object];
         tempPeripheral = p;
-        [self sentConnectRequest];
+//        [self sentConnectRequest];
     }
 //    [[BLEService sharedInstance] sendNotifications:myPeripheral withType:NO];
     [tblView reloadData];
@@ -1773,6 +1619,8 @@
 }
 -(void) didDiscoveredDevice:(CBPeripheral *)device withRSSI:(NSNumber *)RSSI;
 {
+    [self RemoveHudProcess:scannerHud];
+
     NSLog(@"<========Discovered Device=============>%@",device);
 }
 -(void)onConnectButton:(NSInteger)sender//Connect & DisconnectClicked
@@ -2173,7 +2021,7 @@
             
             NSData * requestData = [APP_DELEGATE SendAssociationRequestFirst:strFinalData withKey:strEncryptedKey withBLEAddress:[APP_DELEGATE getStringConvertedinUnsigned:strRequetAddress] withRawDataLength:completeData.length];
             
-            [[BLEService sharedInstance] writeValuetoDeviceMsg:requestData with:globalPeripheral];
+            [[BLEService sharedInstance] writeValuetoDeviceMsg:requestData with:myPeripheral];
             [[NSUserDefaults standardUserDefaults] setInteger:globalCount forKey:@"GlobalCount"];
             [[NSUserDefaults standardUserDefaults] synchronize];
             
@@ -2185,9 +2033,8 @@
     }
     else
     {
-        [APP_DELEGATE hideScannerView];
-        [APP_DELEGATE endHudProcess];
-        
+        [self RemoveHudProcess:connectDisconnectHud];
+
         NSLog(@"-(void)SengCheckDeviceMethod:(NSString *)stringss withDeviceName:(NSString *)deviceName");
         [alert removeFromSuperview];
         alert = [[FCAlertView alloc] init];
@@ -2215,14 +2062,21 @@
     }
     else
     {
-        if (globalPeripheral.state == CBPeripheralStateConnected)
-        {
+//        if (myPeripheral.state == CBPeripheralStateConnected)
+//        {
             if (pGesture.state == UIGestureRecognizerStateRecognized)
             {
                 //Do something to tell the user!
             }
             if (pGesture.state == UIGestureRecognizerStateBegan)
             {
+                [connectDisconnectHud removeFromSuperview];
+                connectDisconnectHud = [[MBProgressHUD alloc] initWithView:self.view];
+                [self.view addSubview:connectDisconnectHud];
+                connectDisconnectHud.labelText = @"Identifying Device...";
+                [connectDisconnectHud show:YES];
+
+                NSLog(@"UIGestureRecognizerStateBeganUIGestureRecognizerStateBegan");
                 CGPoint touchPoint = [pGesture locationInView:tblView];
                 NSIndexPath* indexPath = [tblView indexPathForRowAtPoint:touchPoint];
                 if (indexPath != nil)
@@ -2276,28 +2130,54 @@
                             }
                             else
                             {
-                                if (globalPeripheral.state == CBPeripheralStateConnected)
+                                if (myPeripheral.state == CBPeripheralStateConnected)
                                 {
                                     [self SengCheckDeviceMethod:manuStr withDeviceName:p.name];
                                 }
                                 else
                                 {
-                                    [APP_DELEGATE endHudProcess];
-//                                    [self ConnectionValidationPopup];
+                                    strReconnectIdentifyManu = manuStr;
+                                    [saveTimoutTimer invalidate];
+                                    saveTimoutTimer = nil;
+                                    saveTimoutTimer = [NSTimer scheduledTimerWithTimeInterval:10 target:self selector:@selector(RetryConnectingforIdentifyDevice) userInfo:nil repeats:NO];
+                                    [[BLEManager sharedManager] connectDevice:p];
                                 }
                             }
                         }
                     }
                 }
             }
-        }
-        else
-        {
-            [APP_DELEGATE endHudProcess];
-            [self ConnectionValidationPopup];
-        }
+//        }
+//        else
+//        {
+//            [self RemoveHudProcess:connectDisconnectHud];
+//            [self RemoveHudProcess:scannerHud];
+//            [self ConnectionValidationPopup];
+//        }
     }
-   
+}
+-(void)RetryConnectingforIdentifyDevice
+{
+    if (myPeripheral.state == CBPeripheralStateConnected)
+    {
+        [self SengCheckDeviceMethod:strReconnectIdentifyManu withDeviceName:myPeripheral.name];
+    }
+    else
+    {
+        [self RemoveHudProcess:connectDisconnectHud];
+        [[BLEManager sharedManager]disconnectDevice:myPeripheral];
+        [alert removeFromSuperview];
+        alert = [[FCAlertView alloc] init];
+        alert.colorScheme = [UIColor blackColor];
+        [alert makeAlertTypeCaution];
+        [alert showAlertInView:self
+                     withTitle:@"Smart Light"
+                  withSubtitle:@"Something went wrong. Please try again later."
+               withCustomImage:[UIImage imageNamed:@"logo.png"]
+           withDoneButtonTitle:nil
+                    andButtons:nil];
+    }
+
 }
 #pragma mark - MEScrollToTopDelegate Methods
 
@@ -2373,6 +2253,13 @@
     [super didReceiveMemoryWarning];
     // Dispose of any resources that can be recreated.
 }
+-(void)RemoveHudProcess:(MBProgressHUD *)hudprocess
+{
+    [hudprocess hide:YES];
+    [hudprocess removeFromSuperview];
+    hudprocess = nil;
+}
+
 @end
 /*
  platform :ios, ‘8.0’

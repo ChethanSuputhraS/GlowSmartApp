@@ -300,7 +300,7 @@ static BLEManager    *sharedManager    = nil;
                 {
                     if (globalPeripheral.state != CBPeripheralStateConnected)
                     {
-                        [[BLEManager sharedManager] connectDevice:peripheral];
+//                        [[BLEManager sharedManager] connectDevice:peripheral];
                     }
                 }
             }
@@ -333,7 +333,7 @@ static BLEManager    *sharedManager    = nil;
                 {
                     if (globalPeripheral.state != CBPeripheralStateConnected)
                     {
-                        [[BLEManager sharedManager] connectDevice:peripheral];
+//                        [[BLEManager sharedManager] connectDevice:peripheral];
                     }
                 }
             }
@@ -914,7 +914,7 @@ static BLEManager    *sharedManager    = nil;
     {
 //        [[BLEService sharedInstance] sendNotifications:peripheral withType:NO withUUID:@"0001D100-AB00-11E1-9B23-00025B00A5A5"];
 //        [[BLEService sharedInstance] readAuthValuefromManager:peripheral];
-//        
+//
 //        [self performSelector:@selector(sendFactoryReset) withObject:nil afterDelay:1];
     }
     else

@@ -260,7 +260,7 @@
     
     cell  = (solidCustomCell *)[_collectionView cellForItemAtIndexPath:indexPath];
     {
-        
+
         //        solidCustomCell *cell = (solidCustomCell *)[_collectionView cellForItemAtIndexPath:selectedIndexPath];
         cell.imgCheck.hidden = NO;
         cell.imgCheck.image = [UIImage imageNamed:@"solidCheck.png"];

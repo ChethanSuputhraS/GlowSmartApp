@@ -54,7 +54,6 @@ API_AVAILABLE(ios(10.0))
     CBCentralManager *centralManager;
     UISlider *brightnessSliderColorView;
     UIButton * btnOptions;
-    BOOL isfromSolid;
     BOOL isVoiceWordFound;
     
     SFSpeechRecognizer * speechRecognizer;
@@ -127,7 +126,7 @@ API_AVAILABLE(ios(10.0))
         [self setSegmentView];
         [self SetViewforColorWheel];
     }
-    brighcount = 100;
+//    brighcount = 100;
     isChanged = NO;
     isShowPopup = YES;
     
@@ -174,8 +173,8 @@ API_AVAILABLE(ios(10.0))
 //        bgTask = [app beginBackgroundTaskWithExpirationHandler:^{
 //            [app endBackgroundTask:bgTask];
 //        }];
-        [colorTimer invalidate];
-        colorTimer = [NSTimer scheduledTimerWithTimeInterval:.52 target:self selector:@selector(MethodtoSendColor) userInfo:nil repeats:YES];
+//        [colorTimer invalidate];
+//        colorTimer = [NSTimer scheduledTimerWithTimeInterval:.52 target:self selector:@selector(MethodtoSendColor) userInfo:nil repeats:YES];
 
         [brightTimer invalidate];
         brightTimer = [NSTimer scheduledTimerWithTimeInterval:.4 target:self selector:@selector(brightcol) userInfo:nil repeats:YES];
@@ -403,14 +402,14 @@ API_AVAILABLE(ios(10.0))
             HRHSVColor hsvColor;
             HSVColorFromUIColor(imgColor, &hsvColor);
             hsvColor.v = imageBrighValue;
-            UIColor *newColor = [[UIColor alloc] initWithHue:hsvColor.h saturation:hsvColor.s brightness:hsvColor.v alpha:1];
-            NSLog(@"==========>MethodtoSendColor=%@",newColor);
-            NSLog(@"==========>BrightNesss=%f",imageBrighValue);
+            
 
-            if (isfromSolid)
-            {
-                newColor = imgColor;
-            }
+            NSLog(@"==========>Before New Color MethodtoSendColor=%@",imgColor);
+
+            UIColor *newColor = [[UIColor alloc] initWithHue:hsvColor.h saturation:hsvColor.s brightness:hsvColor.v alpha:1];
+            NSLog(@"==========>After New Color MethodtoSendColor=%@",newColor);
+//            NSLog(@"==========>BrightNesss=%f",imageBrighValue);
+
             
             const  CGFloat *_components = CGColorGetComponents(newColor.CGColor);
             CGFloat red     = _components[0]; CGFloat green = _components[1]; CGFloat blue   = _components[2];
@@ -431,7 +430,7 @@ API_AVAILABLE(ios(10.0))
             [completeData appendData:dR];
             [completeData appendData:dG];
             [completeData appendData:dB];
-            isChanged = YES;
+//            isChanged = YES;
             if (isSentNoticication)
             {
             }
@@ -612,10 +611,101 @@ API_AVAILABLE(ios(10.0))
         [colorSquareView setHidden:NO];
     } completion:nil];
     imgColorOptionView.currentColorBlock = ^(UIColor *color){
-        isfromSolid = NO;
         imgColor = color;
-        isChanged = YES;
+        isChanged = NO;
+        
+        [self MethodtoSendWheelColor:color];
     };
+}
+-(void)MethodtoSendWheelColor:(UIColor *)currentColor
+{
+    imgColor = currentColor;
+//    const  CGFloat *_components = CGColorGetComponents(currentColor.CGColor);
+//    CGFloat red     = _components[0];
+//    CGFloat green = _components[1];
+//    CGFloat blue   = _components[2];
+    
+    CGFloat brightness;
+    [currentColor getHue:NULL saturation:NULL brightness:&brightness alpha:NULL];
+
+    if (brightness >= 0.1)
+    {
+        HRHSVColor hsvColor;
+        HSVColorFromUIColor(currentColor, &hsvColor);
+        hsvColor.v = imageBrighValue;
+        
+        NSLog(@"==========>Before New Color MethodtoSendColor=%@",imgColor);
+
+        UIColor *newColor = [[UIColor alloc] initWithHue:hsvColor.h saturation:hsvColor.s brightness:hsvColor.v alpha:1];
+        NSLog(@"==========>After New Color MethodtoSendColor=%@",newColor);
+
+        const  CGFloat *_components = CGColorGetComponents(newColor.CGColor);
+        CGFloat red     = _components[0]; CGFloat green = _components[1]; CGFloat blue   = _components[2];
+
+        NSInteger sixth = [@"66" integerValue];
+        NSData * dSix = [[NSData alloc] initWithBytes:&sixth length:1];
+        NSInteger seven = [@"00" integerValue];
+        NSData * dSeven = [[NSData alloc] initWithBytes:&seven length:1];
+        fullRed = red * 255;
+        NSData * dR = [[NSData alloc] initWithBytes:&fullRed length:1];
+        fullGreen = green * 255;
+        NSData * dG = [[NSData alloc] initWithBytes:&fullGreen length:1];
+        fullBlue = blue * 255;
+        NSData * dB = [[NSData alloc] initWithBytes:&fullBlue length:1];
+        completeData = [[NSMutableData alloc] init];
+        completeData = [dSix mutableCopy];
+        [completeData appendData:dSeven];
+        [completeData appendData:dR];
+        [completeData appendData:dG];
+        [completeData appendData:dB];
+
+        if (isSentNoticication)
+        {
+        }
+        else
+        {
+            isSentNoticication = YES;
+            NSMutableDictionary * dict = [[NSMutableDictionary alloc] init];
+            [dict setValue:@"1" forKey:@"isSwitch"];
+            NSString * strSwitchNotify = [NSString stringWithFormat:@"updateDataforONOFF%@",strGlogalNotify];
+            [[NSNotificationCenter defaultCenter] postNotificationName:strSwitchNotify object:dict];
+            _switchLight.isOn = YES;
+            [_switchLight setCustomKnobImage:[UIImage imageNamed:@"on_icon"] inactiveBackgroundImage:[UIImage imageNamed:@"switch_track_icon"] activeBackgroundImage:[UIImage imageNamed:@"switch_track_icon"]];
+        }
+
+    }
+    
+    
+    
+
+        if (fullRed ==0 && fullBlue ==0 && fullGreen == 0)
+        {
+        }
+        else
+        {
+            [APP_DELEGATE sendSignalViaScan:@"ColorChange" withDeviceID:globalGroupId withValue:@"0"]; //KalpeshScanCode
+        }
+    
+    isChanged = NO;
+    
+    if (isFromAll)
+    {
+        _switchLight.isOn = YES;
+        isAlldevicePowerOn = YES;
+        [_switchLight setCustomKnobImage:[UIImage imageNamed:@"on_icon"] inactiveBackgroundImage:[UIImage imageNamed:@"switch_track_icon"] activeBackgroundImage:[UIImage imageNamed:@"switch_track_icon"]];
+    }
+    else
+    {
+        _switchLight.isOn = YES;
+        [_switchLight setCustomKnobImage:[UIImage imageNamed:@"on_icon"] inactiveBackgroundImage:[UIImage imageNamed:@"switch_track_icon"] activeBackgroundImage:[UIImage imageNamed:@"switch_track_icon"]];
+    }
+    if (globalPeripheral.state == CBPeripheralStateConnected)
+    {
+//            [[BLEService sharedInstance] writeColortoDevice:completeData with:globalPeripheral withDestID:globalGroupId];
+    }
+    [[NSUserDefaults standardUserDefaults] setInteger:globalCount forKey:@"GlobalCount"];
+    [[NSUserDefaults standardUserDefaults] synchronize];
+
 }
 -(void)btnMoreColorOptionClick
 {
@@ -809,11 +899,93 @@ API_AVAILABLE(ios(10.0))
     }
     UISlider *slider = (UISlider*)sender;
     imageBrighValue = slider.value/100;
-    isChanged = YES;
-    int currentvalue = slider.value;
+    isChanged = NO;
     
-    CGRect trackRect = [slider trackRectForBounds:slider.bounds];
-    CGRect thumbRect = [slider thumbRectForBounds:slider.bounds trackRect:trackRect value:slider.value];
+    CGFloat brightness;
+    [imgColor getHue:NULL saturation:NULL brightness:&brightness alpha:NULL];
+
+    if (brightness >= 0.1)
+    {
+        HRHSVColor hsvColor;
+        HSVColorFromUIColor(imgColor, &hsvColor);
+        hsvColor.v = imageBrighValue;
+        
+        NSLog(@"==========>Before New Color MethodtoSendColor=%@",imgColor);
+
+        UIColor *newColor = [[UIColor alloc] initWithHue:hsvColor.h saturation:hsvColor.s brightness:hsvColor.v alpha:1];
+        NSLog(@"==========>After New Color MethodtoSendColor=%@",newColor);
+
+        const  CGFloat *_components = CGColorGetComponents(newColor.CGColor);
+        CGFloat red = _components[0]; CGFloat green = _components[1]; CGFloat blue   = _components[2];
+
+        NSInteger sixth = [@"66" integerValue];
+        NSData * dSix = [[NSData alloc] initWithBytes:&sixth length:1];
+        NSInteger seven = [@"00" integerValue];
+        NSData * dSeven = [[NSData alloc] initWithBytes:&seven length:1];
+        fullRed = red * 255;
+        NSData * dR = [[NSData alloc] initWithBytes:&fullRed length:1];
+        fullGreen = green * 255;
+        NSData * dG = [[NSData alloc] initWithBytes:&fullGreen length:1];
+        fullBlue = blue * 255;
+        NSData * dB = [[NSData alloc] initWithBytes:&fullBlue length:1];
+        completeData = [[NSMutableData alloc] init];
+        completeData = [dSix mutableCopy];
+        [completeData appendData:dSeven];
+        [completeData appendData:dR];
+        [completeData appendData:dG];
+        [completeData appendData:dB];
+
+        if (isSentNoticication)
+        {
+        }
+        else
+        {
+            isSentNoticication = YES;
+            NSMutableDictionary * dict = [[NSMutableDictionary alloc] init];
+            [dict setValue:@"1" forKey:@"isSwitch"];
+            NSString * strSwitchNotify = [NSString stringWithFormat:@"updateDataforONOFF%@",strGlogalNotify];
+            [[NSNotificationCenter defaultCenter] postNotificationName:strSwitchNotify object:dict];
+            _switchLight.isOn = YES;
+            [_switchLight setCustomKnobImage:[UIImage imageNamed:@"on_icon"] inactiveBackgroundImage:[UIImage imageNamed:@"switch_track_icon"] activeBackgroundImage:[UIImage imageNamed:@"switch_track_icon"]];
+        }
+
+    }
+    
+    
+    
+
+        if (fullRed ==0 && fullBlue ==0 && fullGreen == 0)
+        {
+        }
+        else
+        {
+            [APP_DELEGATE sendSignalViaScan:@"ColorChange" withDeviceID:globalGroupId withValue:@"0"]; //KalpeshScanCode
+        }
+    
+    isChanged = NO;
+    
+    if (isFromAll)
+    {
+        _switchLight.isOn = YES;
+        isAlldevicePowerOn = YES;
+        [_switchLight setCustomKnobImage:[UIImage imageNamed:@"on_icon"] inactiveBackgroundImage:[UIImage imageNamed:@"switch_track_icon"] activeBackgroundImage:[UIImage imageNamed:@"switch_track_icon"]];
+    }
+    else
+    {
+        _switchLight.isOn = YES;
+        [_switchLight setCustomKnobImage:[UIImage imageNamed:@"on_icon"] inactiveBackgroundImage:[UIImage imageNamed:@"switch_track_icon"] activeBackgroundImage:[UIImage imageNamed:@"switch_track_icon"]];
+    }
+    if (globalPeripheral.state == CBPeripheralStateConnected)
+    {
+//            [[BLEService sharedInstance] writeColortoDevice:completeData with:globalPeripheral withDestID:globalGroupId];
+    }
+    [[NSUserDefaults standardUserDefaults] setInteger:globalCount forKey:@"GlobalCount"];
+    [[NSUserDefaults standardUserDefaults] synchronize];
+
+//    int currentvalue = slider.value;
+//
+//    CGRect trackRect = [slider trackRectForBounds:slider.bounds];
+//    CGRect thumbRect = [slider thumbRectForBounds:slider.bounds trackRect:trackRect value:slider.value];
     
     
 //    lblThumbTint.center = CGPointMake(thumbRect.origin.x +slider.frame.origin.x+20,slider.frame.origin.y-5); // baiyya commented
@@ -855,7 +1027,6 @@ API_AVAILABLE(ios(10.0))
 }
 -(void)pickSolidColor:(KPSolidColorView *)pickerView didSelectColor:(UIColor *)color;
 {
-    isfromSolid = YES;
     imgColor = color;
     const  CGFloat *_components = CGColorGetComponents(color.CGColor);
     CGFloat red   = _components[0];
@@ -885,7 +1056,37 @@ API_AVAILABLE(ios(10.0))
     [completeData appendData:dG];
     [completeData appendData:dB];
     
-    isChanged = YES;
+    isChanged = NO;
+    
+ 
+        isSentNoticication = YES;
+        NSMutableDictionary * dict = [[NSMutableDictionary alloc] init];
+        [dict setValue:@"1" forKey:@"isSwitch"];
+        NSString * strSwitchNotify = [NSString stringWithFormat:@"updateDataforONOFF%@",strGlogalNotify];
+        [[NSNotificationCenter defaultCenter] postNotificationName:strSwitchNotify object:dict];
+        _switchLight.isOn = YES;
+        [_switchLight setCustomKnobImage:[UIImage imageNamed:@"on_icon"] inactiveBackgroundImage:[UIImage imageNamed:@"switch_track_icon"] activeBackgroundImage:[UIImage imageNamed:@"switch_track_icon"]];
+
+    if (fullRed ==0 && fullBlue ==0 && fullGreen == 0)
+    {
+    }
+    else
+    {
+        [APP_DELEGATE sendSignalViaScan:@"ColorChange" withDeviceID:globalGroupId withValue:@"0"]; //KalpeshScanCode
+    }
+    if (isFromAll)
+    {
+        _switchLight.isOn = YES;
+        isAlldevicePowerOn = YES;
+        [_switchLight setCustomKnobImage:[UIImage imageNamed:@"on_icon"] inactiveBackgroundImage:[UIImage imageNamed:@"switch_track_icon"] activeBackgroundImage:[UIImage imageNamed:@"switch_track_icon"]];
+    }
+    else
+    {
+        _switchLight.isOn = YES;
+        [_switchLight setCustomKnobImage:[UIImage imageNamed:@"on_icon"] inactiveBackgroundImage:[UIImage imageNamed:@"switch_track_icon"] activeBackgroundImage:[UIImage imageNamed:@"switch_track_icon"]];
+    }
+    [[NSUserDefaults standardUserDefaults] setInteger:globalCount forKey:@"GlobalCount"];
+    [[NSUserDefaults standardUserDefaults] synchronize];
 }
 -(NSArray *)CreateNewColors
 {
@@ -987,7 +1188,6 @@ API_AVAILABLE(ios(10.0))
 }
 -(void)sendPattern
 {
-    isfromSolid = NO;
     
     [APP_DELEGATE sendSignalViaScan:@"Pattern" withDeviceID:globalGroupId withValue:[NSString stringWithFormat:@"%ld",(long)selecedPtrn]]; //KalpeshScanCode
     if (globalPeripheral.state ==CBPeripheralStateConnected)
@@ -1077,9 +1277,8 @@ API_AVAILABLE(ios(10.0))
         
     }
     colorPicker.currentColorBlock = ^(UIColor *color){
-        isfromSolid = NO;
         imgColor = color;
-        isChanged = YES;
+        [self MethodtoSendWheelColor:color];
     };
     [UIView transitionWithView:self.view duration:0.5 options:UIViewAnimationOptionTransitionCrossDissolve animations:^(void){
         [bgWhiteView setHidden:NO];
@@ -1325,6 +1524,7 @@ API_AVAILABLE(ios(10.0))
                     [self VoiceTextToColorChange:result.bestTranscription.formattedString];
                     [audioEngine stop];
                     [recognitionRequest endAudio];
+                    
                     btnVoice.enabled = YES;
                     isFinal = YES;
 
@@ -1343,6 +1543,7 @@ API_AVAILABLE(ios(10.0))
                 recognitionRequest = nil;
                 recognitionTask = nil;
                 btnVoice.enabled = YES;
+//                isFinal = YES;// css add this
             }
         }];
         
@@ -1408,12 +1609,6 @@ else
 //            lblVoiceDetected.text = [[voiceColors objectAtIndex:i] valueForKey:@"name"];
 
             UIColor * rgbColor = [self colorWithHexString:[[voiceColors objectAtIndex:i]valueForKey:@"color_rgb"]];
-            
-//            CGColorRef colorRef = rgbColor.CGColor;
-////            NSString *colorString = [CIColor colorWithCGColor:colorRef].stringRepresentation;
-//            NSString *colorString = [self->colorNames nameForColor:rgbColor];
-
-//            NSString* colorString = [rgbColor description];
             lblVoiceStatus.text = [[voiceColors objectAtIndex:i] valueForKey:@"name"]; //
 
             imgColor = rgbColor;
@@ -1443,7 +1638,48 @@ else
             [completeData appendData:dR];
             [completeData appendData:dG];
             [completeData appendData:dB];
-            isChanged = YES;
+            isChanged = NO;
+            
+            if (isSentNoticication)
+            {
+            }
+            else
+            {
+                isSentNoticication = YES;
+                NSMutableDictionary * dict = [[NSMutableDictionary alloc] init];
+                [dict setValue:@"1" forKey:@"isSwitch"];
+                NSString * strSwitchNotify = [NSString stringWithFormat:@"updateDataforONOFF%@",strGlogalNotify];
+                [[NSNotificationCenter defaultCenter] postNotificationName:strSwitchNotify object:dict];
+                _switchLight.isOn = YES;
+                [_switchLight setCustomKnobImage:[UIImage imageNamed:@"on_icon"] inactiveBackgroundImage:[UIImage imageNamed:@"switch_track_icon"] activeBackgroundImage:[UIImage imageNamed:@"switch_track_icon"]];
+            }
+            
+            if (fullRed ==0 && fullBlue ==0 && fullGreen == 0)
+            {
+            }
+            else
+            {
+                [APP_DELEGATE sendSignalViaScan:@"ColorChange" withDeviceID:globalGroupId withValue:@"0"]; //KalpeshScanCode
+            }
+            
+            if (isFromAll)
+            {
+                _switchLight.isOn = YES;
+                isAlldevicePowerOn = YES;
+                [_switchLight setCustomKnobImage:[UIImage imageNamed:@"on_icon"] inactiveBackgroundImage:[UIImage imageNamed:@"switch_track_icon"] activeBackgroundImage:[UIImage imageNamed:@"switch_track_icon"]];
+            }
+            else
+            {
+                _switchLight.isOn = YES;
+                [_switchLight setCustomKnobImage:[UIImage imageNamed:@"on_icon"] inactiveBackgroundImage:[UIImage imageNamed:@"switch_track_icon"] activeBackgroundImage:[UIImage imageNamed:@"switch_track_icon"]];
+            }
+            if (globalPeripheral.state == CBPeripheralStateConnected)
+            {
+    //            [[BLEService sharedInstance] writeColortoDevice:completeData with:globalPeripheral withDestID:globalGroupId];
+            }
+            [[NSUserDefaults standardUserDefaults] setInteger:globalCount forKey:@"GlobalCount"];
+            [[NSUserDefaults standardUserDefaults] synchronize];
+
             break;
         }
     }
@@ -1667,7 +1903,37 @@ else
         [completeData appendData:dG];
         [completeData appendData:dB];
         
-        isChanged = YES;
+        isChanged = NO;
+        
+
+            if (fullRed ==0 && fullBlue ==0 && fullGreen == 0)
+            {
+            }
+            else
+            {
+                [APP_DELEGATE sendSignalViaScan:@"ColorChange" withDeviceID:globalGroupId withValue:@"0"]; //KalpeshScanCode
+            }
+        
+        isChanged = NO;
+        
+        if (isFromAll)
+        {
+            _switchLight.isOn = YES;
+            isAlldevicePowerOn = YES;
+            [_switchLight setCustomKnobImage:[UIImage imageNamed:@"on_icon"] inactiveBackgroundImage:[UIImage imageNamed:@"switch_track_icon"] activeBackgroundImage:[UIImage imageNamed:@"switch_track_icon"]];
+        }
+        else
+        {
+            _switchLight.isOn = YES;
+            [_switchLight setCustomKnobImage:[UIImage imageNamed:@"on_icon"] inactiveBackgroundImage:[UIImage imageNamed:@"switch_track_icon"] activeBackgroundImage:[UIImage imageNamed:@"switch_track_icon"]];
+        }
+        if (globalPeripheral.state == CBPeripheralStateConnected)
+        {
+//            [[BLEService sharedInstance] writeColortoDevice:completeData with:globalPeripheral withDestID:globalGroupId];
+        }
+        [[NSUserDefaults standardUserDefaults] setInteger:globalCount forKey:@"GlobalCount"];
+        [[NSUserDefaults standardUserDefaults] synchronize];
+
     }
 }
 - (void)changeBrightness:(StepSlider *)sender
@@ -1729,7 +1995,6 @@ else
         [completeData appendData:dG];
         [completeData appendData:dB];
         
-        isChanged = YES;
     }
     isBrighNess = YES;
 }
@@ -1761,7 +2026,6 @@ else
     _brightnessSlider.hidden = YES; solidView.hidden = YES; musicView.hidden = YES; imgColorOptionView.hidden = YES;
     
     isWarmWhite = NO;
-    isfromSolid = NO;
     
     if ([sender tag] == 50)
     {
@@ -1794,7 +2058,6 @@ else
     else if ([sender tag]==51)
     {
         imgBack.hidden = true;
-        isfromSolid = YES;
         if (solidView)
         {
             [UIView transitionWithView:self.view duration:0.5 options:UIViewAnimationOptionTransitionCrossDissolve animations:^(void){
@@ -1933,7 +2196,6 @@ else
     voiceView.hidden = YES; musicView.hidden = YES; solidView.hidden = YES;
     
     isWarmWhite = NO;
-    isfromSolid = NO;
     
     if (sender.selectedSegmentIndex==0)
     {
@@ -2284,7 +2546,6 @@ else
         return 150*approaxSize;
     }
 }
-
 - (void)tableView:(UITableView *)tableView willDisplayHeaderView:(UIView *)view forSection:(NSInteger)section
 {
     if (tableView == tblVoices)
@@ -2298,7 +2559,6 @@ else
 {
     cell.backgroundColor = [UIColor clearColor];
 }
-
 #pragma mark- Speach to Text Methods
 - (void) pocketsphinxDidReceiveHypothesis:(NSString *)hypothesis recognitionScore:(NSString *)recognitionScore utteranceID:(NSString *)utteranceID
 {
@@ -2338,7 +2598,6 @@ else
                     [self switchOffDevice:deviceID withType:NO];
                 }
 //                lblVoiceDetected.text = @"OFF";
-
             }
             else
             {
@@ -2346,33 +2605,84 @@ else
 
                 UIColor * rgbColor = [self colorWithHexString:[[voiceColors objectAtIndex:i]valueForKey:@"color_rgb"]];
                 imgColor = rgbColor;
-                const  CGFloat *_components = CGColorGetComponents(rgbColor.CGColor);
-                CGFloat red   = _components[0];
-                CGFloat green = _components[1];
-                CGFloat blue   = _components[2];
+                CGFloat brightness;
+                [imgColor getHue:NULL saturation:NULL brightness:&brightness alpha:NULL];
+
+                if (brightness >= 0.1)
+                {
+                    HRHSVColor hsvColor;
+                    HSVColorFromUIColor(imgColor, &hsvColor);
+                    hsvColor.v = imageBrighValue;
+                    
+                    NSLog(@"==========>Before New Color MethodtoSendColor=%@",imgColor);
+
+                    UIColor *newColor = [[UIColor alloc] initWithHue:hsvColor.h saturation:hsvColor.s brightness:hsvColor.v alpha:1];
+                    NSLog(@"==========>After New Color MethodtoSendColor=%@",newColor);
+        //            NSLog(@"==========>BrightNesss=%f",imageBrighValue);
+
+                    
+                    const  CGFloat *_components = CGColorGetComponents(newColor.CGColor);
+                    CGFloat red     = _components[0]; CGFloat green = _components[1]; CGFloat blue   = _components[2];
+                    
+                    NSInteger sixth = [@"66" integerValue];
+                    NSData * dSix = [[NSData alloc] initWithBytes:&sixth length:1];
+                    NSInteger seven = [@"00" integerValue];
+                    NSData * dSeven = [[NSData alloc] initWithBytes:&seven length:1];
+                    fullRed = red * 255;
+                    NSData * dR = [[NSData alloc] initWithBytes:&fullRed length:1];
+                    fullGreen = green * 255;
+                    NSData * dG = [[NSData alloc] initWithBytes:&fullGreen length:1];
+                    fullBlue = blue * 255;
+                    NSData * dB = [[NSData alloc] initWithBytes:&fullBlue length:1];
+                    completeData = [[NSMutableData alloc] init];
+                    completeData = [dSix mutableCopy];
+                    [completeData appendData:dSeven];
+                    [completeData appendData:dR];
+                    [completeData appendData:dG];
+                    [completeData appendData:dB];
+                    isChanged = NO;
+                    if (isSentNoticication)
+                    {
+                    }
+                    else
+                    {
+                        isSentNoticication = YES;
+                        NSMutableDictionary * dict = [[NSMutableDictionary alloc] init];
+                        [dict setValue:@"1" forKey:@"isSwitch"];
+                        NSString * strSwitchNotify = [NSString stringWithFormat:@"updateDataforONOFF%@",strGlogalNotify];
+                        [[NSNotificationCenter defaultCenter] postNotificationName:strSwitchNotify object:dict];
+                        _switchLight.isOn = YES;
+                        [_switchLight setCustomKnobImage:[UIImage imageNamed:@"on_icon"] inactiveBackgroundImage:[UIImage imageNamed:@"switch_track_icon"] activeBackgroundImage:[UIImage imageNamed:@"switch_track_icon"]];
+                    }
+                }
                 
-                NSInteger sixth = [@"66" integerValue];
-                NSData * dSix = [[NSData alloc] initWithBytes:&sixth length:1];
+                if (fullRed ==0 && fullBlue ==0 && fullGreen == 0)
+                {
+                }
+                else
+                {
+                    [APP_DELEGATE sendSignalViaScan:@"ColorChange" withDeviceID:globalGroupId withValue:@"0"]; //KalpeshScanCode
+                }
                 
-                NSInteger seven = [@"00" integerValue];
-                NSData * dSeven = [[NSData alloc] initWithBytes:&seven length:1];
+                isChanged = NO;
                 
-                fullRed = red * 255;
-                NSData * dR = [[NSData alloc] initWithBytes:&fullRed length:1];
-                
-                fullGreen = green * 255;
-                NSData * dG = [[NSData alloc] initWithBytes:&fullGreen length:1];
-                
-                fullBlue = blue * 255;
-                NSData * dB = [[NSData alloc] initWithBytes:&fullBlue length:1];
-                
-                completeData = [[NSMutableData alloc] init];
-                completeData = [dSix mutableCopy];
-                [completeData appendData:dSeven];
-                [completeData appendData:dR];
-                [completeData appendData:dG];
-                [completeData appendData:dB];
-                isChanged = YES;
+                if (isFromAll)
+                {
+                    _switchLight.isOn = YES;
+                    isAlldevicePowerOn = YES;
+                    [_switchLight setCustomKnobImage:[UIImage imageNamed:@"on_icon"] inactiveBackgroundImage:[UIImage imageNamed:@"switch_track_icon"] activeBackgroundImage:[UIImage imageNamed:@"switch_track_icon"]];
+                }
+                else
+                {
+                    _switchLight.isOn = YES;
+                    [_switchLight setCustomKnobImage:[UIImage imageNamed:@"on_icon"] inactiveBackgroundImage:[UIImage imageNamed:@"switch_track_icon"] activeBackgroundImage:[UIImage imageNamed:@"switch_track_icon"]];
+                }
+                if (globalPeripheral.state == CBPeripheralStateConnected)
+                {
+        //            [[BLEService sharedInstance] writeColortoDevice:completeData with:globalPeripheral withDestID:globalGroupId];
+                }
+                [[NSUserDefaults standardUserDefaults] setInteger:globalCount forKey:@"GlobalCount"];
+                [[NSUserDefaults standardUserDefaults] synchronize];
             }
             break;
         }
@@ -2609,7 +2919,102 @@ else
     [completeData appendData:dB];
     
     imgColor = [UIColor colorWithRed:fullRed/255.0f green:fullGreen/255.0f blue:fullBlue/255.0f alpha:1.0];
-    isChanged = YES;
+    isChanged = NO;
+    CGFloat brightness;
+    [imgColor getHue:NULL saturation:NULL brightness:&brightness alpha:NULL];
+
+    if (brightness >= 0.1)
+    {
+        HRHSVColor hsvColor;
+        HSVColorFromUIColor(imgColor, &hsvColor);
+        hsvColor.v = imageBrighValue;
+        
+
+        NSLog(@"==========>Before New Color MethodtoSendColor=%@",imgColor);
+
+        UIColor *newColor = [[UIColor alloc] initWithHue:hsvColor.h saturation:hsvColor.s brightness:hsvColor.v alpha:1];
+        NSLog(@"==========>After New Color MethodtoSendColor=%@",newColor);
+//            NSLog(@"==========>BrightNesss=%f",imageBrighValue);
+
+        
+        const  CGFloat *_components = CGColorGetComponents(newColor.CGColor);
+        CGFloat red     = _components[0]; CGFloat green = _components[1]; CGFloat blue   = _components[2];
+        
+        NSInteger sixth = [@"66" integerValue];
+        NSData * dSix = [[NSData alloc] initWithBytes:&sixth length:1];
+        NSInteger seven = [@"00" integerValue];
+        NSData * dSeven = [[NSData alloc] initWithBytes:&seven length:1];
+        fullRed = red * 255;
+        NSData * dR = [[NSData alloc] initWithBytes:&fullRed length:1];
+        fullGreen = green * 255;
+        NSData * dG = [[NSData alloc] initWithBytes:&fullGreen length:1];
+        fullBlue = blue * 255;
+        NSData * dB = [[NSData alloc] initWithBytes:&fullBlue length:1];
+        completeData = [[NSMutableData alloc] init];
+        completeData = [dSix mutableCopy];
+        [completeData appendData:dSeven];
+        [completeData appendData:dR];
+        [completeData appendData:dG];
+        [completeData appendData:dB];
+        if (isSentNoticication)
+        {
+        }
+        else
+        {
+            isSentNoticication = YES;
+            NSMutableDictionary * dict = [[NSMutableDictionary alloc] init];
+            [dict setValue:@"1" forKey:@"isSwitch"];
+            NSString * strSwitchNotify = [NSString stringWithFormat:@"updateDataforONOFF%@",strGlogalNotify];
+            [[NSNotificationCenter defaultCenter] postNotificationName:strSwitchNotify object:dict];
+            _switchLight.isOn = YES;
+            [_switchLight setCustomKnobImage:[UIImage imageNamed:@"on_icon"] inactiveBackgroundImage:[UIImage imageNamed:@"switch_track_icon"] activeBackgroundImage:[UIImage imageNamed:@"switch_track_icon"]];
+        }
+    }
+    if (isWarmWhite)
+    {
+        if (fullRed ==0 && fullBlue ==0 && fullGreen == 0)
+        {
+        }
+        else
+        {
+            [APP_DELEGATE sendSignalViaScan:@"ColorWhiteChange" withDeviceID:globalGroupId withValue:@"0"]; //KalpeshScanCode
+        }
+    }
+    else
+    {
+        if (fullRed ==0 && fullBlue ==0 && fullGreen == 0)
+        {
+        }
+        else
+        {
+            [APP_DELEGATE sendSignalViaScan:@"ColorChange" withDeviceID:globalGroupId withValue:@"0"]; //KalpeshScanCode
+        }
+    }
+    
+    isChanged = NO;
+    
+    if (isFromAll)
+    {
+        _switchLight.isOn = YES;
+        isAlldevicePowerOn = YES;
+        [_switchLight setCustomKnobImage:[UIImage imageNamed:@"on_icon"] inactiveBackgroundImage:[UIImage imageNamed:@"switch_track_icon"] activeBackgroundImage:[UIImage imageNamed:@"switch_track_icon"]];
+    }
+    else
+    {
+        _switchLight.isOn = YES;
+        [_switchLight setCustomKnobImage:[UIImage imageNamed:@"on_icon"] inactiveBackgroundImage:[UIImage imageNamed:@"switch_track_icon"] activeBackgroundImage:[UIImage imageNamed:@"switch_track_icon"]];
+    }
+    if (globalPeripheral.state == CBPeripheralStateConnected)
+    {
+//            [[BLEService sharedInstance] writeColortoDevice:completeData with:globalPeripheral withDestID:globalGroupId];
+    }
+    [[NSUserDefaults standardUserDefaults] setInteger:globalCount forKey:@"GlobalCount"];
+    [[NSUserDefaults standardUserDefaults] synchronize];
+
+    
+    
+    
+    
     
     imgRGBBulb.image = [imgRGBBulb.image imageWithRenderingMode:UIImageRenderingModeAlwaysTemplate];
     
