@@ -265,10 +265,11 @@ static BLEManager    *sharedManager    = nil;
 - (void)centralManager:(CBCentralManager *)central didDiscoverPeripheral:(CBPeripheral *)peripheral advertisementData:(NSDictionary *)advertisementData RSSI:(NSNumber *)RSSI
 {
     NSString * checkNameStr = [NSString stringWithFormat:@"%@",peripheral.name];
-    if ([checkNameStr rangeOfString:@"Vithamas"].location != NSNotFound)
-    {
+    if ([checkNameStr rangeOfString:@"Vithamas"].location != NSNotFound && ![checkNameStr isEqualToString:@"Vithamas’s iPhone"] && ![checkNameStr isEqualToString:@"Vithamas MacBook Air"])
+    {//
+        
         NSString * strConnect = [NSString stringWithFormat:@"%@",[advertisementData valueForKey:@"kCBAdvDataIsConnectable"]];
-//        NSLog(@"Here is Found Peripheral===%@",peripheral);
+//        NSLog(@"Here is Found Peripheral===%@ and type=%@",peripheral,strConnect);
         if ([strConnect isEqualToString:@"1"])
         {
             if (peripheral.state == CBPeripheralStateDisconnected ||  peripheral.state == CBPeripheralStateConnected)
@@ -630,7 +631,6 @@ static BLEManager    *sharedManager    = nil;
                             {
                                 [self.delegate DeviceAddedSuccessfully:dict];
                             }
-                            [self.delegate DeviceAddedSuccessfully:dict];
                             strSelectedAddress = @"NA";
                         }
                     }
@@ -846,8 +846,6 @@ static BLEManager    *sharedManager    = nil;
                     NSLog(@"3------------><-------------3===>%@",dict);
                     [arrGlobalDevices addObject:dict];
                 }
-                
-//                [nsu];
             }
         }
     }
@@ -869,7 +867,7 @@ static BLEManager    *sharedManager    = nil;
 }
 -(void) peripheral:(CBPeripheral *)peripheral didDiscoverServices:(NSError *)error
 {
-    NSLog(@"4------------> didDiscoverServices Device");
+    NSLog(@"4------------> didDiscoverServices Device=%@",peripheral.services);
 
     BOOL gotService = NO;
     for(CBService* svc in peripheral.services)
@@ -879,8 +877,7 @@ static BLEManager    *sharedManager    = nil;
         if(svc.characteristics)
             [self peripheral:peripheral didDiscoverCharacteristicsForService:svc error:nil]; //already discovered characteristic before, DO NOT do it again
         else
-            [peripheral discoverCharacteristics:nil
-                                     forService:svc]; //need to discover characteristics
+            [peripheral discoverCharacteristics:nil forService:svc]; //need to discover characteristics
     }
     if (gotService == NO)
     {
@@ -891,12 +888,6 @@ static BLEManager    *sharedManager    = nil;
 
 -(void) peripheral:(CBPeripheral *)peripheral didDiscoverCharacteristicsForService:(CBService *)service error:(NSError *)error
 {
-    for(CBCharacteristic* c in service.characteristics)
-    {
-//        NSLog(@"characteristics=%@",c);
-        
-        //Do some work with the characteristic...
-    }
     globalPeripheral = peripheral;
     NSLog(@"5------------> didDiscoverCharacteristicsForService Device");
 
@@ -914,7 +905,6 @@ static BLEManager    *sharedManager    = nil;
     {
 //        [[BLEService sharedInstance] sendNotifications:peripheral withType:NO withUUID:@"0001D100-AB00-11E1-9B23-00025B00A5A5"];
 //        [[BLEService sharedInstance] readAuthValuefromManager:peripheral];
-//
 //        [self performSelector:@selector(sendFactoryReset) withObject:nil afterDelay:1];
     }
     else
@@ -967,9 +957,15 @@ static BLEManager    *sharedManager    = nil;
         [completeData appendData:dataHour];
         [completeData appendData:dataMin];
         
-        [[BLEService sharedInstance] writeValuetoDeviceMsg:completeData with:globalPeripheral];
-        [[NSUserDefaults standardUserDefaults] setInteger:globalCount forKey:@"GlobalCount"];
-        [[NSUserDefaults standardUserDefaults] synchronize];
+        
+        if (![currentScreen isEqualToString:@"AddDevice"])
+        {
+            [[BLEService sharedInstance] writeValuetoDeviceMsg:completeData with:globalPeripheral];
+            [[NSUserDefaults standardUserDefaults] setInteger:globalCount forKey:@"GlobalCount"];
+            [[NSUserDefaults standardUserDefaults] synchronize];
+        }
+        
+        
         
         isTimeSetSuccess = YES;
 //        NSLog(@"Time set");
@@ -1069,3 +1065,5 @@ static BLEManager    *sharedManager    = nil;
 //0a00 0002 32ac 6057 26
 //  329a00cc090000ea761800010001787878
 //<32 d401 0000 0000 dffb 3000 df 1dc06f04 a80600>
+//<CBPeripheral: 0x282872da0, identifier = F2AE977D-50AE-73E4-6741-81629220E0F7, name = Vithamas AC Stp, state = disconnected> and type=1
+//<CBPeripheral: 0x282872da0, identifier = F2AE977D-50AE-73E4-6741-81629220E0F7, name = Vithamas AC Stp, state = disconnected> and type=0

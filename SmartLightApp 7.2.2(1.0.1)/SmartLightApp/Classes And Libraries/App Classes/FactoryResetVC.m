@@ -814,7 +814,8 @@
 }
 -(void)GlobalBLuetoothCheck
 {
-    
+    [APP_DELEGATE endHudProcess];
+
     UIAlertController *alertController = [UIAlertController alertControllerWithTitle:@"Vithamas" message:@"Please enable Bluetooth Connection. Tap on enable Bluetooth icon by swiping Up." preferredStyle:UIAlertControllerStyleAlert];
     UIAlertAction *defaultAction = [UIAlertAction actionWithTitle:@"OK" style:UIAlertActionStyleDefault handler:^(UIAlertAction *action) {}];
     [alertController addAction:defaultAction];
@@ -1094,3 +1095,6 @@
 
 @end
 
+/*
+ Do you want to factory reset the device blinking red? : Yes / No
+ **/

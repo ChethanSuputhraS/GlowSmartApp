@@ -222,7 +222,12 @@ static BLEService    *sharedInstance    = nil;
         }
     }
 }
+- (void)peripheral:(CBPeripheral *)peripheral didWriteValueForCharacteristic:(CBCharacteristic *)characteristic error:(nullable NSError *)error;
+{
+    NSLog(@"Kalpesh ====>>>>  didUpdateValueForCharacteristic==%@",characteristic);
 
+
+}
 - (void) peripheral:(CBPeripheral *)peripheral didUpdateValueForCharacteristic:(CBCharacteristic *)characteristic error:(NSError *)error
 {
     //Kalpesh here notification will come
@@ -1083,7 +1088,7 @@ static BLEService    *sharedInstance    = nil;
     //    NSString * strPassKey = [[NSUserDefaults standardUserDefaults] valueForKey:@"passKey"];
     //    NSString * strEncryptKey = [self getStringConvertedinUnsigned:strPassKey];
     //    NSData *data = [APP_DELEGATE GetEncryptedKeyforData:strVal withKey:strEncryptKey];
-//    NSLog(@"SENDING   ....  Data=%@",StrData);
+    NSLog(@"SENDING   ....  Data=%@",StrData);
     
     [self CBUUIDwriteValue:sUUID characteristicUUID:cUUID p:peripheral data:message];
 }

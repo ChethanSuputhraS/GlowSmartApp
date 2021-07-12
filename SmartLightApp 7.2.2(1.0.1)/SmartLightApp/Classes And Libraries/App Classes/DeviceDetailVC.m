@@ -60,7 +60,7 @@ API_AVAILABLE(ios(10.0))
     SFSpeechAudioBufferRecognitionRequest *  recognitionRequest;
     SFSpeechRecognitionTask * recognitionTask;
     AVAudioEngine * audioEngine;
-    
+    AVAudioSession * audioSession;
     DBColorNames *colorNames;
 }
 @property (strong, nonatomic) JMMarkSlider * redSlider;
@@ -189,8 +189,6 @@ API_AVAILABLE(ios(10.0))
     [[NSNotificationCenter defaultCenter] removeObserver:self name:@"ShowColorSelectScreen" object:nil];
     [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(ShowAddFavColorScreen) name:@"ShowColorSelectScreen" object:nil];
 
-
-    
     if (isMusicModeOn)
     {
         [self startMusicRecording];
@@ -1021,9 +1019,8 @@ API_AVAILABLE(ios(10.0))
         solidColorView.frame = CGRectMake(0, 0, DEVICE_WIDTH, DEVICE_HEIGHT-yAbove-45);
     }
 //    solidView.hidden = YES;
-    [UIView transitionWithView:self.view duration:0.5 options:UIViewAnimationOptionTransitionCrossDissolve animations:^(void){
-        [solidView setHidden:NO];
-    } completion:nil];
+    [solidView setHidden:NO];
+
 }
 -(void)pickSolidColor:(KPSolidColorView *)pickerView didSelectColor:(UIColor *)color;
 {
@@ -1489,6 +1486,19 @@ API_AVAILABLE(ios(10.0))
 
 -(void)startRecording
 {
+    if (isMusicModeOn == YES)
+    {
+        isMusicModeOn = NO;
+        [btnMusic setTitleColor:[UIColor whiteColor] forState:UIControlStateNormal];
+        [btnMusic setTitle:@"Start Music Mode" forState:UIControlStateNormal];
+        [self stopRecording];
+
+    }
+    
+    audioRecorder = nil;
+
+
+//    [[audioEngine inputNode] removeTapOnBus:0];
     // Clear all previous session data and cancel task
     if (recognitionTask != nil)
     {
@@ -1497,7 +1507,11 @@ API_AVAILABLE(ios(10.0))
     }
     
     // Create instance of audio session to record voice
-    AVAudioSession * audioSession = [AVAudioSession sharedInstance];
+    if (audioSession)
+    {
+        audioSession = [[AVAudioSession alloc] init];
+    }
+  audioSession = [AVAudioSession sharedInstance];
     if (@available(iOS 10.0, *)) {
         [audioSession setCategory:AVAudioSessionCategoryRecord mode:AVAudioSessionModeMeasurement options:AVAudioSessionCategoryOptionDefaultToSpeaker error:nil];
         
@@ -1513,32 +1527,36 @@ API_AVAILABLE(ios(10.0))
             
             if (result != nil)
             {
-                if (isVoiceWordFound == NO)
+                if (result.bestTranscription.formattedString.lowercaseString != nil)
                 {
-                    isVoiceWordFound = YES;
-//                    lblVoiceStatus.text = result.bestTranscription.formattedString; // baiyya commented
-                    isFinal = result.isFinal;
-                    NSLog(@"Result==================%@ ",result.bestTranscription.formattedString);
-                    
-                    UIColor *color = result.bestTranscription.formattedString.color;
-                    [self VoiceTextToColorChange:result.bestTranscription.formattedString];
-                    [audioEngine stop];
-                    [recognitionRequest endAudio];
-                    
-                    btnVoice.enabled = YES;
-                    isFinal = YES;
+                    if (isVoiceWordFound == NO)
+                    {
+                        isVoiceWordFound = YES;
+    //                    lblVoiceStatus.text = result.bestTranscription.formattedString; // baiyya commented
+                        isFinal = result.isFinal;
+                        NSLog(@"Result==================%@ ",result.bestTranscription.formattedString);
+                        
+//                        UIColor *color = result.bestTranscription.formattedString.color;
+                        [self VoiceTextToColorChange:result.bestTranscription.formattedString];
+                       
+                        [audioEngine stop];
+                        [recognitionRequest endAudio];
+                        [inputNode removeTapOnBus:0];
 
+                        btnVoice.enabled = YES;
+                        isFinal = YES;
+
+                    }
                 }
-                else
-                {
-                    
-                }
+
+                
 
             }
             if (error != nil || isFinal == YES)
             {
                 [audioEngine stop];
-                [inputNode removeTapOnBus:0];
+                [recognitionRequest endAudio];
+//                [inputNode removeTapOnBus:0];
                 
                 recognitionRequest = nil;
                 recognitionTask = nil;
@@ -2060,10 +2078,7 @@ else
         imgBack.hidden = true;
         if (solidView)
         {
-            [UIView transitionWithView:self.view duration:0.5 options:UIViewAnimationOptionTransitionCrossDissolve animations:^(void){
-                [solidView setHidden:NO];
-            } completion:nil];
-
+            [solidView setHidden:NO];
         }
         else
         {
@@ -2095,6 +2110,9 @@ else
         imgBack.hidden = false;
 
         isWhite  = NO; isWarmWhite = NO; isVoicView = YES;
+
+        speechRecognizer = [[SFSpeechRecognizer alloc] initWithLocale:[NSLocale localeWithLocaleIdentifier:@"en-US"]];
+        audioEngine = [[AVAudioEngine alloc] init];
 
         [self setupVoiceView];
 
@@ -2232,17 +2250,19 @@ else
     else if (sender.selectedSegmentIndex==1)
     {
         imgBack.hidden = true;
+        [self setPatternView];
+
         patternSelected = -1;
-        if (patternView)
-        {
-            [UIView transitionWithView:patternView duration:0.5 options:UIViewAnimationOptionTransitionCrossDissolve animations:^(void){
-                [patternView setHidden:NO];
-            } completion:nil];
-        }
-        else
-        {
-            [self setPatternView];
-        }
+//        if (patternView)
+//        {
+//            [UIView transitionWithView:patternView duration:0.5 options:UIViewAnimationOptionTransitionCrossDissolve animations:^(void){
+//            } completion:nil];
+//            
+//        }
+//        else
+//        {
+//            [self setPatternView];
+//        }
         voiceView.hidden = YES; bgWhiteView.hidden = YES; rgbView.hidden = YES; colorSquareView.hidden = YES; _brightnessSlider.hidden = YES;
         solidView.hidden = YES; musicView.hidden = YES;
     }
@@ -3383,10 +3403,17 @@ else
 }
 -(void)SetupRecording
 {
+    [recognitionTask cancel];
+    recognitionTask = nil;
+
+    [audioEngine stop];
+    [recognitionRequest endAudio];
+    [[audioEngine inputNode] removeTapOnBus:0];
+
     // kSeconds = 150.0;
 //    NSLog(@"startRecording");
     audioRecorder = nil;
-    AVAudioSession *audioSession = [AVAudioSession sharedInstance];
+    audioSession = [AVAudioSession sharedInstance];
 //    [audioSession setCategory:AVAudioSessionCategoryPlayAndRecord error:nil];
     [audioSession setCategory:AVAudioSessionCategoryPlayAndRecord
                   withOptions:AVAudioSessionCategoryOptionMixWithOthers|AVAudioSessionCategoryOptionDefaultToSpeaker
@@ -3443,6 +3470,7 @@ else
 }
 -(void)btnMusicClick:(id)sender
 {
+
     if (isMusicModeOn)
     {
         isMusicModeOn = NO;

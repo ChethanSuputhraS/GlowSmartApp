@@ -22,7 +22,6 @@
 #import "HistoryCell.h"
 #import "HRHSVColorUtil.h"
 
-
 @interface DashboardVC ()<MNMPullToRefreshManagerClient,CBCentralManagerDelegate,floatMenuDelegate,UIGestureRecognizerDelegate>
 {
     NSMutableArray * tmpGroupArr, * syncedDeletedListArr;
@@ -36,7 +35,6 @@
     NSInteger brightnessIndex;
     BOOL isCentralAssigned;
     NSString * isRequestfor;
-    
 }
 @property (nonatomic) NSIndexPath *expandingIndexPath;
 @property (nonatomic) NSIndexPath *expandedIndexPath;
@@ -905,58 +903,10 @@
             else
             {
                 [APP_DELEGATE startHudProcess:@"Removing Device..."];
-                [self performSelector:@selector(timeOutForDeleteDevice) withObject:nil afterDelay:5];
-                // Put your action here
-                if ([sectionArr count]> selectedIndexPathl.row)
-                {
-                    syncedDeletedListArr = [[NSMutableArray alloc] init];
-                    [self removeDevice];
-                    
-                    if ([sectionArr count]> selectedIndexPathl.row)
-                    {
-                        syncedDeletedListArr = [[NSMutableArray alloc] init];
-                        [self removeDevice];
-                        NSString * strUpdate = [NSString stringWithFormat:@"Update Device_Table set status ='2',is_sync = '0' where device_id = '%@'",strDeviceID];
-                        [[DataBaseManager dataBaseManager] execute:strUpdate];
-                        [syncedDeletedListArr addObject:strDeviceID];
-                        
-                        if ([sectionArr count] > selectedIndexPathl.row)
-                        {
-                            
-                            NSMutableDictionary * dict = [[NSMutableDictionary alloc] init];
-                            dict = [sectionArr objectAtIndex:selectedIndexPathl.row];
-                            [dict setObject:@"0" forKey:@"status"];
-                            [self SaveDeviceDetailstoServer:dict];
-                            [APP_DELEGATE hudEndProcessMethod];
-                            
-                            [sectionArr removeObjectAtIndex:selectedIndexPathl.row];
-                            [tblView reloadData];
-                        }
-                        self.expandingIndexPathGroup = nil;
-                        self.expandedIndexPathGroup = nil;
-                        self.expandingIndexPath = nil;
-                        self.expandedIndexPath = nil;
-                        
-                        if ([sectionArr count]>0)
-                        {
-                            noMsgView.hidden = YES;
-                        }
-                        else
-                        {
-                            noMsgView.hidden = NO;
-                        }
-                        
-                        FCAlertView *alert = [[FCAlertView alloc] init];
-                        alert.colorScheme = [UIColor blackColor];
-                        [alert makeAlertTypeSuccess];
-                        [alert showAlertInView:self
-                                     withTitle:@"Smart Light"
-                                  withSubtitle:@"Device has been removed successfully."
-                               withCustomImage:[UIImage imageNamed:@"logo.png"]
-                           withDoneButtonTitle:nil
-                                    andButtons:nil];
-                    }
-                }
+                [self performSelector:@selector(timeOutForDeleteDevice) withObject:nil afterDelay:2.5];
+                [self removeDevice];
+
+                
             }
         }
     }];
@@ -2285,23 +2235,55 @@
 -(void)timeOutForDeleteDevice
 {
     [APP_DELEGATE endHudProcess];
-    if ([isAction isEqualToString:@"DeviceDeleted"])
+
+    // Put your action here
+    if ([sectionArr count]> selectedIndexPathl.row)
     {
-        
+        syncedDeletedListArr = [[NSMutableArray alloc] init];
+        if ([sectionArr count]> selectedIndexPathl.row)
+        {
+            syncedDeletedListArr = [[NSMutableArray alloc] init];
+            NSString * strUpdate = [NSString stringWithFormat:@"Update Device_Table set status ='2',is_sync = '0' where device_id = '%@'",strDeviceID];
+            [[DataBaseManager dataBaseManager] execute:strUpdate];
+            [syncedDeletedListArr addObject:strDeviceID];
+            
+            if ([sectionArr count] > selectedIndexPathl.row)
+            {
+                NSMutableDictionary * dict = [[NSMutableDictionary alloc] init];
+                dict = [sectionArr objectAtIndex:selectedIndexPathl.row];
+                [dict setObject:@"0" forKey:@"status"];
+                [self SaveDeviceDetailstoServer:dict];
+                [APP_DELEGATE hudEndProcessMethod];
+                
+                [sectionArr removeObjectAtIndex:selectedIndexPathl.row];
+                [tblView reloadData];
+            }
+            self.expandingIndexPathGroup = nil;
+            self.expandedIndexPathGroup = nil;
+            self.expandingIndexPath = nil;
+            self.expandedIndexPath = nil;
+            
+            if ([sectionArr count]>0)
+            {
+                noMsgView.hidden = YES;
+            }
+            else
+            {
+                noMsgView.hidden = NO;
+            }
+            
+            FCAlertView *alert = [[FCAlertView alloc] init];
+            alert.colorScheme = [UIColor blackColor];
+            [alert makeAlertTypeSuccess];
+            [alert showAlertInView:self
+                         withTitle:@"Smart Light"
+                      withSubtitle:@"Device has been removed successfully."
+                   withCustomImage:[UIImage imageNamed:@"logo.png"]
+               withDoneButtonTitle:nil
+                        andButtons:nil];
+        }
     }
-    else
-    {
-        /*NSString * strMsg = [NSString stringWithFormat:@"Something went wrong. Please try again."];
-        FCAlertView *alert = [[FCAlertView alloc] init];
-        alert.colorScheme = [UIColor blackColor];
-        [alert makeAlertTypeCaution];
-        [alert showAlertInView:self
-                     withTitle:@"Smart Light"
-                  withSubtitle:strMsg
-               withCustomImage:[UIImage imageNamed:@"logo.png"]
-           withDoneButtonTitle:nil
-                    andButtons:nil];*/
-    }
+   
 }
 -(void)BLEConnectionErrorPopup
 {
@@ -2419,6 +2401,7 @@ alert.colorScheme = [UIColor blackColor];
 }
 -(void)GlobalBLuetoothCheck
 {
+    [APP_DELEGATE endHudProcess];
 
     UIAlertController *alertController = [UIAlertController alertControllerWithTitle:@"Vithamas" message:@"Please enable Bluetooth Connection. Tap on enable Bluetooth icon by swiping Up." preferredStyle:UIAlertControllerStyleAlert];
     UIAlertAction *defaultAction = [UIAlertAction actionWithTitle:@"OK" style:UIAlertActionStyleDefault handler:^(UIAlertAction *action) {}];
@@ -2685,59 +2668,6 @@ alert.colorScheme = [UIColor blackColor];
     strGlogalNotify = @"Dashboard";
     
     [APP_DELEGATE sendSignalViaScan:@"DeleteUUID" withDeviceID:strDeviceID withValue:@"0"]; //KalpeshScanCode
-    
-    if (globalPeripheral.state == CBPeripheralStateConnected)
-    {
-        NSMutableData * collectChekData = [[NSMutableData alloc] init];
-        
-        NSInteger int1 = [@"100" integerValue];
-        NSData * data1 = [[NSData alloc] initWithBytes:&int1 length:1];
-        
-        globalCount = globalCount + 1;
-        NSInteger int2 = globalCount;
-        NSData * data2 = [[NSData alloc] initWithBytes:&int2 length:2];
-        collectChekData = [data2 mutableCopy];
-        
-        NSInteger int3 = [@"9000" integerValue];
-        NSData * data3 = [[NSData alloc] initWithBytes:&int3 length:2];
-        [collectChekData appendData:data3];
-        
-        NSInteger int4 = [strDeviceID integerValue];
-        NSData * data4 = [[NSData alloc] initWithBytes:&int4 length:2];
-        [collectChekData appendData:data4];
-        
-        NSInteger int5 = [@"0" integerValue];
-        NSData * data5 = [[NSData alloc] initWithBytes:&int5 length:2];
-        [collectChekData appendData:data5];
-        
-        NSInteger int6 = [@"55" integerValue];
-        NSData * data6 = [[NSData alloc] initWithBytes:&int6 length:2];
-        [collectChekData appendData:data6];
-        
-        NSData * finalCheckSumData = [APP_DELEGATE GetCountedCheckSumData:collectChekData];
-        
-        NSMutableData * completeData = [[NSMutableData alloc] init];
-        completeData = [data1 mutableCopy];
-        [completeData appendData:data2];
-        [completeData appendData:data3];
-        [completeData appendData:data4];
-        [completeData appendData:finalCheckSumData];
-        [completeData appendData:data6];
-        
-        NSString * StrData = [NSString stringWithFormat:@"%@",completeData.debugDescription];
-        StrData = [StrData stringByReplacingOccurrencesOfString:@" " withString:@""];
-        StrData = [StrData stringByReplacingOccurrencesOfString:@"<" withString:@""];
-        StrData = [StrData stringByReplacingOccurrencesOfString:@">" withString:@""];
-        
-        NSString * strEncryptedKey = [APP_DELEGATE getStringConvertedinUnsigned:[[NSUserDefaults standardUserDefaults] valueForKey:@"passKey"]];
-        NSString * strFinalData = [APP_DELEGATE getStringConvertedinUnsigned:StrData];
-        
-        NSData * requestData = [APP_DELEGATE GetEncryptedKeyforData:strFinalData withKey:strEncryptedKey withLength:completeData.length];
-        
-        [[BLEService sharedInstance] writeValuetoDeviceMsg:requestData with:globalPeripheral];
-        [[NSUserDefaults standardUserDefaults] setInteger:globalCount forKey:@"GlobalCount"];
-        [[NSUserDefaults standardUserDefaults] synchronize];
-    }
 }
 -(void)sendDeviceonebyone
 {

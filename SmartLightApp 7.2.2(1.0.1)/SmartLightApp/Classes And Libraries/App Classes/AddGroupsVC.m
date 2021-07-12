@@ -429,12 +429,8 @@
 -(void)InitialBLE
 {
     [[NSNotificationCenter defaultCenter] removeObserver:self name:@"CallNotificationforAddGroups" object:nil];
-    [[NSNotificationCenter defaultCenter] removeObserver:self name:@"deviceDidDisConnectNotification" object:nil];
-    [[NSNotificationCenter defaultCenter] removeObserver:self name:@"deviceDidConnectNotification" object:nil];
     
     [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(CallNotificationforNonConnect:) name:@"CallNotificationforAddGroups" object:nil];
-    [[NSNotificationCenter defaultCenter]addObserver:self selector:@selector(DeviceDidConnectNotification:) name:@"deviceDidConnectNotification" object:nil];
-    [[NSNotificationCenter defaultCenter]addObserver:self selector:@selector(DeviceDidDisConnectNotification:) name:@"deviceDidDisConnectNotification" object:nil];
 }
 -(void)specificNotify:(NSNotification*)notification
 {
@@ -595,6 +591,10 @@
         //        NSString * strDelete = [NSString stringWithFormat:@"Delete from GroupsTable where device_id = '%@' and local_group_id = '%@'",strDeviceID,strGroupID];
         //        [[DataBaseManager dataBaseManager] execute:strDelete];
     }
+}
+-(void)DeviceDidDisConnectNotification:(NSNotification*)notification//Disconnect periperal
+{
+    
 }
 #pragma mark - Webservice Methods
 -(void)SaveGroupWebservice:(NSString *)devID hexId:(NSString*)hexId devName:(NSString *)name withCommandName:(NSString *)strCommand

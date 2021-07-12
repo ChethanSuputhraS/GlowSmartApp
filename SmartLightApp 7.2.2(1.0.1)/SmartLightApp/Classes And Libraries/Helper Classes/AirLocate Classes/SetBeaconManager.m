@@ -130,7 +130,8 @@ NSNumber *power = nil;
         
 //        NSLog(@"Sent UUID =%@",self.uuid);
 
-        region = [[CLBeaconRegion alloc] initWithProximityUUID:self.uuid major:[self.major shortValue] minor:[self.minor shortValue] identifier:@"Kp's iPad"];
+        region = [[CLBeaconRegion alloc] initWithProximityUUID:self.uuid major:[self.major shortValue] minor:[self.minor shortValue] identifier:@"Vithamas"];
+        
         peripheralData = [region peripheralDataWithMeasuredPower:power];
         
         // The region's peripheral data contains the CoreBluetooth-specific data we need to advertise.
